@@ -319,10 +319,10 @@ public class FileUtils {
         return src.delete();
     }
 
-    public static String getNameWithoutExtension(String name) {
-        final int idx = name.lastIndexOf('.');
-        final int p = name.lastIndexOf('/');
-        return idx > 0 && idx > p ? name.substring(0,idx) : name;
+    public static String getNameWithoutExtension(String path) {
+        final int idx = path.lastIndexOf('.');
+        final int p = Math.max(0, path.lastIndexOf('/'));
+        return idx > 0 && idx > p ? path.substring(p, idx) : path.substring(p);
     }
 
     public static File newFile(File file, FilenameBuilder filenameBuilder) {
@@ -336,7 +336,7 @@ public class FileUtils {
 
     // logtest sz: 24119884507 bytes nio.filewalker java 7: 126 ms
     // logtest sz: 24119884507 bytes filerecursive : 101 ms
-    // logtest sz: 24125898752 bytes bash du : 51 ms
+    // logtest sz: 24125898752 bytes shell du : 51 ms
     public static long getDirSizeInBytes(File file){
         if (true)
             return getFolderSizeDu(file);
