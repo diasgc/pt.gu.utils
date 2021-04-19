@@ -2,6 +2,7 @@ package pt.gu.utils;
 
 import android.text.format.DateUtils;
 import android.util.Log;
+import android.util.Size;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -141,11 +142,11 @@ public class StringUtils {
         return true;
     }
 
-    public static String readAll(InputStream src){
-        return readAll(src,"UTF-8",true);
+    public static String readStream(InputStream src){
+        return readStream(src,"UTF-8",true);
     }
 
-    public static String readAll(InputStream src, String encoding, boolean unixLineBreak) {
+    public static String readStream(InputStream src, String encoding, boolean unixLineBreak) {
         StringBuilder sb = new StringBuilder();
         final String lineBreak = unixLineBreak ? "\n" : "\r\n";
         final BufferedReader br = new BufferedReader(new InputStreamReader(src, Charset.forName(encoding)));
@@ -185,6 +186,23 @@ public class StringUtils {
         return sb.toString();
     }
 
+    private static final String[] SIZE_UNITS = {"B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
+    private static final int SIZE_UNITS_LEN = SIZE_UNITS.length;
+
+    public static String formatSize(long size) {
+        int i = 0;
+        double s = size;
+        while (s > 1024 && i < SIZE_UNITS_LEN) {
+            s /= 1024;
+            i++;
+        }
+        return String.format(Locale.US,"%.01f %s",s, SIZE_UNITS[i]);
+    }
+
+    public static String fromSize(Size size){
+        return String.format(Locale.getDefault(),"%d x %d",size.getWidth(), size.getHeight());
+    }
+
     public static String formatTime(long time){
         if (time < DateUtils.MINUTE_IN_MILLIS)
             return new SimpleDateFormat("s's'").format(time);
@@ -206,7 +224,7 @@ public class StringUtils {
         return charSequences;
     }
 
-    public static String toString(Map<String, String> map, String sep) {
+    public static String fromMap(Map<String, String> map, String sep) {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<String,String> e : map.entrySet())
             sb.append(e.getKey()).append(sep).append(e.getValue()).append("\n");

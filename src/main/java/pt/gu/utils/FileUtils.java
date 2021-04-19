@@ -14,6 +14,7 @@ import androidx.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -45,6 +46,7 @@ public class FileUtils {
     private static final int ABBREV_DATE_FORMAT = DateUtils.FORMAT_ABBREV_WEEKDAY
             | DateUtils.FORMAT_ABBREV_MONTH
             | DateUtils.FORMAT_ABBREV_RELATIVE;
+
     private static final long LIMITDATE = new Date(80,1,1).getTime();
 
     public static final int KB = 1024;
@@ -57,23 +59,6 @@ public class FileUtils {
         final String[] units = new String[]{"B", "kB", "MB", "GB", "TB"};
         int digitGroups = (int) (Math.log10(size) / Math.log10(1000));
         return new DecimalFormat(format).format(size / Math.pow(1024, digitGroups)) + " " + units[digitGroups];
-    }
-
-    private static final String[] SIZE_UNITS = {"B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
-    private static final int SIZE_UNITS_LEN = SIZE_UNITS.length;
-    public static String formatSize(long size) {
-        int i = 0;
-        double s = size;
-        while (s > 1024 && i < SIZE_UNITS_LEN) {
-            s /= 1024;
-            i++;
-        }
-        return String.format(Locale.US,"%.01f %s",s,SIZE_UNITS[i]);
-    }
-
-
-    public static String formatSize_(long size) {
-        return formatSize(size, "#,##0.#");
     }
 
     public static String formatSize(long size, int flags) {
@@ -122,6 +107,18 @@ public class FileUtils {
             Log.e(TAG,ex.toString());
         }
         return false;
+    }
+
+    public static int file2int(File f, int valIfError){
+        try {
+            FileInputStream fis = new FileInputStream(f);
+            final int len = fis.available();
+            byte[] data = new byte[len];
+            if (len == fis.read(data)){
+                return TypeUtils.parseInt(new String(data),valIfError);
+            }
+        } catch (Exception ignore){ }
+        return valIfError;
     }
 
     @Nullable
