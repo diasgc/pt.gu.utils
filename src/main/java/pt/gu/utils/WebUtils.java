@@ -16,13 +16,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -32,73 +29,6 @@ import java.util.function.Function;
 public class WebUtils {
 
     private static final String TAG = WebUtils.class.getSimpleName();
-
-
-    private static DownloadResultListener<Bitmap> getBitmapListener(final ResultListener<Bitmap> listener) {
-        return new DownloadResultListener<Bitmap>() {
-            @Override
-            public Bitmap getResult(InputStream input) {
-                BitmapFactory.Options options = new BitmapFactory.Options();
-                return BitmapFactory.decodeStream(input, null, options);
-            }
-
-            @Override
-            public void onSuccess(Bitmap result) {
-                listener.onSuccess(result);
-            }
-
-            @Override
-            public void onError() {
-                listener.onError();
-            }
-        };
-    }
-
-    private static DownloadResultListener<String> getStringListener(final ResultListener<String> listener) {
-        return new DownloadResultListener<String>() {
-            @Override
-            public String getResult(InputStream input) {
-                return StringUtils.readStream(input);
-            }
-
-            @Override
-            public void onSuccess(String result) {
-                listener.onSuccess(result);
-            }
-
-            @Override
-            public void onError() {
-                listener.onError();
-            }
-        };
-    }
-
-    private static DownloadResultListener<byte[]> getBinListener(final ResultListener<byte[]> listener) {
-        return new DownloadResultListener<byte[]>() {
-            @Override
-            public byte[] getResult(InputStream input) {
-                try {
-                    return IoUtils.toByteArray(input,true);
-                } catch (IOException ex){
-                  Log.e(TAG, ex.toString());
-                }
-                return new byte[0];
-            }
-
-            @Override
-            public void onSuccess(byte[] result) {
-                listener.onSuccess(result);
-            }
-
-            @Override
-            public void onError() {
-                listener.onError();
-            }
-        };
-    }
-
-    public static final int DOWNLOAD_SUCCESS = -1;
-    public static final int DOWNLOAD_ERROR = -2;
 
     public static void joinStreams(OutputStream out, Iutils.Progress p, List<Uri> uris){
 
@@ -121,8 +51,6 @@ public class WebUtils {
                 }
             }
         });
-
-
     }
 
     public static void join(List<String> urls, OutputStream out, IoUtils.ProgressListener listener){
@@ -142,7 +70,7 @@ public class WebUtils {
                             listener.onProgress(-1, null);
                         }
                     } catch (IOException e){
-                        listener.onProgress(WebUtils.DOWNLOAD_ERROR,null);
+                        listener.onProgress(-2,null);
                     }
                 }
             }).start();
@@ -185,21 +113,6 @@ public class WebUtils {
         return null;
     }
 
-
-    public static void getUrlPage(String url,final ResultListener<String> listener){
-        Downloader<String> d = new Downloader<>(url, getStringListener(listener));
-        d.execute();
-    }
-
-    public static void getUrlData(String url,final ResultListener<byte[]> listener){
-        Downloader<byte[]> d = new Downloader<>(url, getBinListener(listener));
-        d.execute();
-    }
-
-    public static void getFavIcon(String url,final ResultListener<Bitmap> listener){
-        Downloader<Bitmap> d = new Downloader<>(url+"/favicon.ico",getBitmapListener(listener));
-        d.execute();
-    }
 
     public interface ResultListener<T> {
         void onSuccess(T result);

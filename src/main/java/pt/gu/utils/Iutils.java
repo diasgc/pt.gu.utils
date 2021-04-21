@@ -11,4 +11,10 @@ public class Iutils {
         void onUpdate(int len, String tag);
         boolean cancel();
     }
+
+    public interface Result<T> {
+
+        T get();
+
+    }
 }

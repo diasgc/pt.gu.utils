@@ -6,23 +6,38 @@ import java.util.List;
 
 public class UriUtils {
 
-    public static Uri buildWithPaths(Uri src, List<String> paths){
-        Uri.Builder b = new Uri.Builder().scheme(src.getScheme()).authority(src.getAuthority());
-        if (paths != null && paths.size() > 0) {
-            for (String p : paths) {
-                b.appendPath(p);
-            }
-        }
+    public static Uri getContentUri(String authority, String... paths){
+        Uri.Builder b = new Uri.Builder()
+                .scheme("content")
+                .authority(authority);
+        setPathSegments(b, paths);
         return b.build();
     }
 
-    public static Uri buildWithPaths(Uri src, String... paths){
-        Uri.Builder b = new Uri.Builder().scheme(src.getScheme()).authority(src.getAuthority());
+    public static void setPathSegments(Uri.Builder b, String... paths){
         if (paths != null && paths.length > 0) {
             for (String p : paths) {
                 b.appendPath(p);
             }
         }
+    }
+
+    public static void setPathSegments(Uri.Builder b, List<String> paths){
+        if (paths != null && paths.size() > 0) {
+            for (String p : paths)
+                b.appendPath(p);
+        }
+    }
+
+    public static Uri setPathSegments(Uri src, List<String> paths){
+        Uri.Builder b = new Uri.Builder().scheme(src.getScheme()).authority(src.getAuthority());
+        setPathSegments(b, paths);
+        return b.build();
+    }
+
+    public static Uri setPathSegments(Uri src, String... paths){
+        Uri.Builder b = new Uri.Builder().scheme(src.getScheme()).authority(src.getAuthority());
+        setPathSegments(b, paths);
         return b.build();
     }
 
@@ -30,7 +45,7 @@ public class UriUtils {
         List<String> paths = src.getPathSegments();
         if (paths != null && paths.size() > 0) {
             paths.set(paths.size() - 1, newLastSegment);
-            return buildWithPaths(src,paths);
+            return setPathSegments(src, paths);
         }
         return src.buildUpon().appendPath(newLastSegment).build();
     }
