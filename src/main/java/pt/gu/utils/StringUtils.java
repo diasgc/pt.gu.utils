@@ -25,7 +25,7 @@ public class StringUtils {
         return source != null ? source.split(regex) : null;
     }
 
-    public static String bytesToString(byte[] bytes, char nonAsciiChar) {
+    public static String bytesToAscii(byte[] bytes, char nonAsciiChar) {
         char[] chars = new char[bytes.length];
         for (int i = 0; i < chars.length; i++)
             if (bytes[i] < 0x20 || bytes[i] > 0x7e)
@@ -35,7 +35,7 @@ public class StringUtils {
         return new String(chars);
     }
 
-    public static String bytesToString(byte[] bytes, int offset, int len, char nonAsciiChar) {
+    public static String bytesToAscii(byte[] bytes, int offset, int len, char nonAsciiChar) {
         char[] chars = new char[bytes.length];
         for (int i = offset; i < offset + len ; i++)
             if (bytes[i] < 0x20 || bytes[i] > 0x7e)

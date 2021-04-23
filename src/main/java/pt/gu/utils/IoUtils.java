@@ -72,12 +72,12 @@ public class IoUtils {
 
     /**
      * Same as toString(src, "UTF-8", true, autoclose)
-     * @param src
-     * @param autoclose
-     * @return
+     * @param src the source inputstream
+     * @param autoClose close stream after done
+     * @return String content of inputstream
      */
-    public static String toString(InputStream src, boolean autoclose){
-        return toString(src,"UTF-8",true, autoclose);
+    public static String toString(InputStream src, boolean autoClose){
+        return toString(src,"UTF-8",true, autoClose);
     }
 
     /**
@@ -183,7 +183,7 @@ public class IoUtils {
     }
 
     public static boolean streamCopy(int fdSrc, int fdDst, @Nullable ProgressListener listener){
-        return streamCopy(new File("/proc/self/fd/"+fdSrc), new File("/proc/self/fd/"+fdDst), listener);
+        return streamCopy(new File("/proc/self/fd", String.valueOf(fdSrc)), new File("/proc/self/fd", String.valueOf(fdDst)), listener);
     }
 
     public static boolean streamCopy(File src, File dst,@Nullable ProgressListener listener) {
