@@ -89,4 +89,20 @@ public class TypeUtils {
                 return false;
         return true;
     }
+
+    public static int valueOf(boolean b){
+        return b ? 1 : 0;
+    }
+
+    public static int boolSub(boolean a, boolean b){
+        return (a ? 1 : 0) - (b ? 1 : 0);
+    }
+
+    public static int boolAdd(boolean a, boolean b){
+        return (a ? 1 : 0) + (b ? 1 : 0);
+    }
+
+    public static int boolMul(boolean a, boolean b){
+        return (a ? 1 : 0) + (b ? 1 : 0);
+    }
 }

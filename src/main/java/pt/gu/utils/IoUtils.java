@@ -1098,4 +1098,63 @@ public class IoUtils {
             }
         }
     }
+
+    public static int readInt8u(ByteBuffer bb) { return 0xff & bb.get(); }
+
+    public static int readInt16u(ByteBuffer bb){
+        return 0xffff & bb.getShort();
+    }
+
+    public static long readInt32u(ByteBuffer bb){
+        return 0xffffffffL & bb.getInt();
+    }
+
+    public static int readInt8u(ByteBuffer bb, int offset) { return 0xff & bb.get(offset); }
+
+    public static int readInt16u(ByteBuffer bb, int offset){
+        return 0xffff & bb.getShort(offset);
+    }
+
+    public static long readInt32u(ByteBuffer bb, int offset){
+        return 0xffffffffL & bb.getInt(offset);
+    }
+
+    public static class BitBuilder {
+
+        private final static byte[] O = {(byte)0x01,(byte)0x02,(byte)0x04,(byte)0x08,(byte)0x10,(byte)0x20,(byte)0x40,(byte)0x80};
+        private final static byte[] A = {(byte)0xFE,(byte)0xFD,(byte)0xFB,(byte)0xF7,(byte)0xEF,(byte)0xDF,(byte)0xBF,(byte)0x7F};
+
+        private int bitSize;
+        private byte[] data;
+        private int bitPos = 0;
+
+        public BitBuilder(int bitSize){
+            this.bitSize = bitSize;
+            data = new byte[bitSize % 8 > 0 ? bitSize/8 + 1 : bitSize/8];
+        }
+
+        public BitBuilder put(int bitIndex, boolean value){
+            if (value)
+                data[bitIndex / 8] |= O[bitIndex % 8];
+            else
+                data[bitIndex / 8] &= A[bitIndex % 8];
+            return this;
+        }
+
+
+        public BitBuilder set(int bitIndex){
+            return put(bitIndex,true);
+        }
+
+        public BitBuilder unset(int bitIndex){
+            return put(bitIndex, false);
+        }
+
+        public BitBuilder toggle(int bitIndex){
+            data[bitIndex / 8] ^= O[bitIndex % 8];
+            return this;
+        }
+
+
+    }
 }
