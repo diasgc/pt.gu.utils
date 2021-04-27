@@ -77,6 +77,10 @@ public class WebUtils {
         }
     }
 
+    public static byte[] download(Uri uri){
+        return DownloadTask.<byte[]>download(uri);
+    }
+
     @Nullable
     private static byte[] downloadData(String u, Iutils.Progress listener){
         HttpURLConnection connection;

@@ -1,6 +1,8 @@
 package pt.gu.utils;
 
+import androidx.annotation.IntRange;
 import androidx.annotation.Nullable;
+import androidx.core.math.MathUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -104,5 +106,100 @@ public class TypeUtils {
 
     public static int boolMul(boolean a, boolean b){
         return (a ? 1 : 0) + (b ? 1 : 0);
+    }
+
+    public static class BitBuilder {
+
+        private final static byte[] O = {(byte)0x01,(byte)0x02,(byte)0x04,(byte)0x08,(byte)0x10,(byte)0x20,(byte)0x40,(byte)0x80};
+        private final static byte[] A = {(byte)0xFE,(byte)0xFD,(byte)0xFB,(byte)0xF7,(byte)0xEF,(byte)0xDF,(byte)0xBF,(byte)0x7F};
+
+        private int bitSize;
+        private byte[] data;
+        private int bitPos = 0;
+
+        enum State{
+            SET, RESET, TOGGLE
+        }
+
+        public BitBuilder(int bitSize){
+            this.bitSize = bitSize;
+            data = new byte[bitSize % 8 > 0 ? bitSize/8 + 1 : bitSize/8];
+        }
+
+        public BitBuilder setBit(int bitIndex, State state){
+            if (state == State.SET)
+                data[bitIndex / 8] |= O[bitIndex % 8];
+            else if (state == State.RESET)
+                data[bitIndex / 8] &= A[bitIndex % 8];
+            else
+                data[bitIndex / 8] ^= O[bitIndex % 8];
+            return this;
+        }
+
+        public BitBuilder setFlag(long flag, State state){
+            int i = 0;
+            if (state == State.SET) {
+                while (i < 8 || flag != 0) {
+                    data[i++] |= (byte)(flag & 0xFF);
+                    flag >>=8;
+                }
+            } else if (state == State.RESET) {
+                while (i < 8 || flag != 0) {
+                    data[i++] &= ~(byte)(flag & 0xFF);
+                    flag >>=8;
+                }
+            } else {
+                while (i < 8 || flag != 0) {
+                    data[i++] ^= (byte)(flag & 0xFF);
+                    flag >>=8;
+                }
+            }
+            return this;
+        }
+
+        public byte[] get(){
+            return data;
+        }
+
+        /**
+         *
+         * @param bitWidth from 0 to 64 bits, other values will be clamped to this range
+         * @return long array with defined bitWidth elements representation of data byte array
+         */
+        public long[] get(int bitWidth){
+            bitWidth = MathUtils.clamp(bitWidth,0,64);
+            final long[] out = new long[(int)Math.ceil(data.length / (bitWidth/8.0))];
+            int k = 0;
+            for (int i = 0 ; i < out.length; i++){
+                for (int j = 0 ; j < bitWidth; j +=8) {
+                    out[i] |= ((byte) (data[k++] & 0xFF)) << j;
+                }
+            }
+            return out;
+        }
+    }
+
+    public static int setFlag(int flags, int flag){
+        return flags | flag;
+    }
+
+    public static int resetFlag(int flags, int flag){
+        return flags & (~flag);
+    }
+
+    public static int toggleFlag(int flags, int flag){
+        return flags ^ flag;
+    }
+
+    public static long setFlag(long flags, long flag){
+        return flags | flag;
+    }
+
+    public static long resetFlag(long flags, long flag){
+        return flags & (~flag);
+    }
+
+    public static long toggleFlag(long flags, long flag){
+        return flags ^ flag;
     }
 }
