@@ -1,6 +1,7 @@
 package pt.gu.utils;
 
 import android.text.format.DateUtils;
+import android.util.ArrayMap;
 import android.util.Log;
 import android.util.Size;
 
@@ -15,8 +16,12 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import static pt.gu.utils.IoUtils.closeQuietly;
 
 public class StringUtils {
 
@@ -155,7 +160,7 @@ public class StringUtils {
             while (null != (read = br.readLine()))
                 sb.append(read).append(lineBreak);
         } catch (Exception ignore){ }
-        IoUtils.closeQuietly(br);
+        closeQuietly(br);
         return sb.toString();
     }
 
@@ -249,12 +254,36 @@ public class StringUtils {
         return str == null ? def : str;
     }
 
+    public static ArrayMap<String, String> toArrayMap(String str, String regexKeysSep, String regexValSep) {
+        ArrayMap<String,String> m = new ArrayMap<>();
+        String[] ks = str.split(regexKeysSep);
+        String[] v;
+        for (String k : ks){
+            v = k.split(regexValSep);
+            if (v.length > 1)
+                m.put(v[0].trim(),v[1].trim());
+        }
+        return m;
+    }
+
+    public static void streamPrint(InputStream is, boolean autoclose, Iutils.Result<String> linePrinter){
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        try {
+            for (String line; (line = br.readLine()) != null; )
+                linePrinter.onResult(line);
+        } catch (IOException e){
+
+        }
+        if (autoclose)
+            closeQuietly(br);
+    }
+
     public static class StringPrinter extends PrintWriter {
 
 
         private StringWriter sw;
 
-        public static StringPrinter get(){
+        public static StringPrinter newInstance(){
             return new StringPrinter(new StringWriter());
         }
 
@@ -268,12 +297,17 @@ public class StringUtils {
             return this;
         }
 
+        public StringPrinter println(String fmt, Object... args){
+            printf(fmt+"\n",args);
+            return this;
+        }
+
         public StringPrinter printStream(InputStream is, boolean autoclose) throws IOException {
             BufferedReader br = new BufferedReader(new InputStreamReader(is));
             for (String line; (line = br.readLine()) != null;)
                 println(line);
             if (autoclose)
-                IoUtils.closeQuietly(br);
+                closeQuietly(br);
             return this;
         }
 
@@ -291,6 +325,10 @@ public class StringUtils {
         @Override
         public String toString() {
             return sw.toString();
+        }
+
+        public List<String> getLines() {
+            return Arrays.asList(sw.toString().split("\n"));
         }
     }
 

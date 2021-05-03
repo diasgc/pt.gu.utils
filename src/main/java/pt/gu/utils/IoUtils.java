@@ -3,12 +3,12 @@ package pt.gu.utils;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
-import android.os.CancellationSignal;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.os.CancellationSignal;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,6 +29,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.io.StringWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
@@ -40,6 +42,7 @@ import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Stack;
 import java.util.TimeZone;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class IoUtils {
@@ -60,6 +63,19 @@ public class IoUtils {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         byte[] data = new byte[4096];
         while ((input.read(data)) > 0)
+            baos.write(data);
+        baos.flush();
+        byte[] res = baos.toByteArray();
+        baos.close();
+        if (autoclose)
+            closeQuietly(input);
+        return res;
+    }
+
+    public static byte[] toByteArray(InputStream input, boolean autoclose, CancellationSignal signal) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] data = new byte[4096];
+        while ((input.read(data)) > 0 && !signal.isCanceled())
             baos.write(data);
         baos.flush();
         byte[] res = baos.toByteArray();
@@ -211,6 +227,100 @@ public class IoUtils {
 
     public static void streamCopy(InputStream is, OutputStream os, @Nullable ProgressListener listener) {
         TransferThread.start(is,os,listener);
+    }
+
+    public static class HttpInputStream extends InputStream {
+
+        public interface Callback {
+            void onConnectionAvailable(HttpInputStream inputStream);
+        }
+
+        private static final String TAG = HttpInputStream.class.getSimpleName();
+
+        private InputStream is;
+        private HttpURLConnection connection;
+        private boolean isConnected = false;
+
+        public static void openUrl(Uri u, Callback callback){
+            Executors.newSingleThreadExecutor().execute(new Runnable() {
+                @Override
+                public void run() {
+                    callback.onConnectionAvailable(HttpInputStream.openUrl(u));
+                }
+            });
+        }
+
+        @Nullable
+        public static HttpInputStream openUrl(Uri u){
+            try {
+                URL url = new URL(u.toString());
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setDoInput(true);
+                connection.connect();
+                return new HttpInputStream(connection);
+            } catch (Exception e) {
+                Log.e(TAG, e.toString());
+            }
+            return null;
+        }
+
+
+        HttpInputStream(HttpURLConnection c) throws IOException{
+            connection = c;
+            is = c.getInputStream();
+            isConnected = is != null;
+        }
+
+        public boolean isConnected(){
+            return isConnected;
+        }
+
+        @Override
+        public int read(byte[] b) throws IOException {
+            return is.read(b);
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            return is.read(b, off, len);
+        }
+
+        @Override
+        public long skip(long n) throws IOException {
+            return is.skip(n);
+        }
+
+        @Override
+        public int available() throws IOException {
+            return is.available();
+        }
+
+        @Override
+        public synchronized void mark(int readlimit) {
+            is.mark(readlimit);
+        }
+
+        @Override
+        public synchronized void reset() throws IOException {
+            is.reset();
+        }
+
+        @Override
+        public boolean markSupported() {
+            return is.markSupported();
+        }
+
+        @Override
+        public int read() throws IOException {
+            return is == null ? 0 : is.read();
+        }
+
+        @Override
+        public void close() throws IOException {
+            is.close();
+            connection.disconnect();
+            super.close();
+        }
     }
 
     public static class OutputStringWriter extends OutputStream {
