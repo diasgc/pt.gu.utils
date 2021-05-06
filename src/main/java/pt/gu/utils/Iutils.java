@@ -1,6 +1,7 @@
 package pt.gu.utils;
 
 import androidx.core.os.CancellationSignal;
+import androidx.core.util.Predicate;
 
 public class Iutils {
 
@@ -10,7 +11,7 @@ public class Iutils {
         String ERROR = "progress.error";
         String CANCEL = "progress.cancel";
 
-        void onUpdate(int len, String tag);
+        void onUpdate(int progress, String tag);
     }
 
     public interface Available {
@@ -29,9 +30,7 @@ public class Iutils {
 
     }
 
-    public interface Validator<T> extends Callback<T>{
-
-        boolean validate(T input);
+    public interface Validator<T> extends Predicate<T>, Callback<T> {
 
     }
 }

@@ -3,6 +3,7 @@ package pt.gu.utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
 
 public class ArrayUtils {
 
@@ -14,6 +15,13 @@ public class ArrayUtils {
     public static <T> void addIf(List<T> list, boolean condition, T element){
         if (condition)
             list.add(element);
+    }
+
+    public static <T> void addIf(List<T> dst, List<T> src, Predicate<T> filter){
+        for(T t : src){
+            if (filter.test(t))
+                dst.add(t);
+        }
     }
 
     public static class ListX<T> extends ArrayList<T> {

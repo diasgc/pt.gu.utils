@@ -278,6 +278,16 @@ public class StringUtils {
             closeQuietly(br);
     }
 
+    public static boolean equalsAny(@Nullable String src, @Nullable String... args) {
+        if (src != null && args != null) {
+            for (String arg : args) {
+                if (src.equals(arg))
+                    return true;
+            }
+        }
+        return false;
+    }
+
     public static class StringPrinter extends PrintWriter {
 
 

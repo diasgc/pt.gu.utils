@@ -44,6 +44,7 @@ import java.util.Stack;
 import java.util.TimeZone;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class IoUtils {
 
@@ -118,6 +119,16 @@ public class IoUtils {
         if (autoclose)
             IoUtils.closeQuietly(br);
         return sb.toString();
+    }
+
+    public static File fileFrom(ParcelFileDescriptor pfd) throws IOException{
+        return new File("/proc/self/fd", String.valueOf(pfd.dup().getFd()));
+    }
+
+    public static void streamPrint(InputStream is, Consumer<String> out, CancellationSignal signal) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        for (String s; !signal.isCanceled() && null != (s = br.readLine());)
+            out.accept(s);
     }
 
 
