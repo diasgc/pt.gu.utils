@@ -240,6 +240,81 @@ public class IoUtils {
         TransferThread.start(is,os,listener);
     }
 
+    public static class HttpOutputStream extends OutputStream {
+
+        public interface Callback {
+            void onConnectionAvailable(HttpOutputStream inputStream);
+        }
+
+        private static final String TAG = HttpOutputStream.class.getSimpleName();
+
+        private OutputStream os;
+        private HttpURLConnection connection;
+        private boolean isConnected = false;
+
+        public static void openUrl(Uri u, HttpOutputStream.Callback callback){
+            Executors.newSingleThreadExecutor().execute(new Runnable() {
+                @Override
+                public void run() {
+                    callback.onConnectionAvailable(HttpOutputStream.openUrl(u));
+                }
+            });
+        }
+
+        @Nullable
+        public static HttpOutputStream openUrl(Uri u){
+            try {
+                URL url = new URL(u.toString());
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setDoOutput(true);
+                connection.connect();
+                return new HttpOutputStream(connection);
+            } catch (Exception e) {
+                Log.e(TAG, e.toString());
+            }
+            return null;
+        }
+
+
+        HttpOutputStream(HttpURLConnection c) throws IOException{
+            connection = c;
+            os = c.getOutputStream();
+            isConnected = os != null;
+        }
+
+        public boolean isConnected(){
+            return isConnected;
+        }
+
+        @Override
+        public void write(int b) throws IOException {
+            os.write(b);
+        }
+
+        @Override
+        public void write(byte[] b) throws IOException {
+            os.write(b);
+        }
+
+        @Override
+        public void write(byte[] b, int off, int len) throws IOException {
+            os.write(b, off, len);
+        }
+
+        @Override
+        public void flush() throws IOException {
+            os.flush();
+        }
+
+        @Override
+        public void close() throws IOException {
+            os.close();
+            connection.disconnect();
+            super.close();
+        }
+    }
+
+
     public static class HttpInputStream extends InputStream {
 
         public interface Callback {
