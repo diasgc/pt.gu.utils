@@ -5,6 +5,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
+import android.util.Printer;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -47,6 +48,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class IoUtils {
+
+    private static final String TAG = IoUtils.class.getSimpleName();
 
     public static ParcelFileDescriptor pipeFrom(InputStream is) throws IOException {
         ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createPipe();
@@ -125,10 +128,24 @@ public class IoUtils {
         return new File("/proc/self/fd", String.valueOf(pfd.dup().getFd()));
     }
 
-    public static void streamPrint(InputStream is, Consumer<String> out, CancellationSignal signal) throws IOException {
+    public static File fileFrom(int fd) {
+        return new File("/proc/self/fd", String.valueOf(fd));
+    }
+
+    public static void streamPrint(InputStream is, Printer out, CancellationSignal signal) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
         for (String s; !signal.isCanceled() && null != (s = br.readLine());)
-            out.accept(s);
+            out.println(s);
+    }
+
+    @Nullable
+    public static ParcelFileDescriptor openPfd(Context context, Uri uri, String mode) {
+        try {
+            return context != null && uri != null ? context.getContentResolver().openFileDescriptor(uri, mode == null ? "r" : mode) : null;
+        } catch (FileNotFoundException e) {
+            Log.e(TAG,e.toString());
+        }
+        return null;
     }
 
 
@@ -1140,6 +1157,10 @@ public class IoUtils {
         }
     }
 
+
+
+
+
     public static final class BitBuffer {
 
         private ByteBuffer out;
@@ -1214,6 +1235,9 @@ public class IoUtils {
             outputStream.write(getBytes());
         }
     }
+
+
+
 
 
     public static class TransferThread extends Thread {

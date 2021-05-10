@@ -2,11 +2,12 @@ package pt.gu.utils;
 
 import android.content.Context;
 import android.net.Uri;
+import android.util.Printer;
 
 import androidx.annotation.Nullable;
+import androidx.core.os.CancellationSignal;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -60,8 +61,19 @@ public class ProcessUtils {
             return this;
         }
 
-        public Builder stdOut(InputStream is){
-            this.out = is;
+        public Builder stdOut(OutputStream os){
+            this.out = os;
+            return this;
+        }
+
+        public Builder stdOut(Printer out){
+            this.out = out;
+            return this;
+        }
+
+        public Builder stdOut(@Nullable Context context, Uri uri) {
+            this.context = context;
+            this.out = uri;
             return this;
         }
 
@@ -70,11 +82,11 @@ public class ProcessUtils {
             return this;
         }
 
-        public Builder output(@Nullable Context context, Uri uri) {
-            this.context = context;
-            this.out = uri;
+        public Builder stdErr(Printer err){
+            this.err = err;
             return this;
         }
+
 
         public Builder setLdPath(String ldPath){
             return setEnv(LD_LIBRARY_PATH,ldPath);
@@ -90,7 +102,7 @@ public class ProcessUtils {
             return this;
         }
 
-        public Process start() throws IOException {
+        public Process start(CancellationSignal signal) throws IOException {
             if (in != null){
                 if (in instanceof File){
                     builder.redirectInput((File) in);
@@ -110,21 +122,35 @@ public class ProcessUtils {
                 } else if (in instanceof Uri){
                     if ("content".equals(((Uri) out).getScheme())){
                         if (context == null)
-                            throw new IOException("Context not defined for "+out.toString());
+                            throw new IOException("Context not defined for " + out.toString());
                         out = context.getContentResolver().openOutputStream((Uri) out);
                     } else if (StringUtils.equalsAny(((Uri) in).getScheme(),"http","https","ftp")){
                         out = IoUtils.HttpOutputStream.openUrl((Uri) out);
                     }
                 }
             }
+            builder.redirectErrorStream(err == null);
+            builder.command(args);
             Process p = builder.start();
+
             if (in instanceof InputStream)
                 IoUtils.TransferThread.start((InputStream)in, p.getOutputStream());
             if (out instanceof OutputStream)
-                IoUtils.TransferThread.start(p.getInputStream(), (OutputStream)out);
+                IoUtils.TransferThread.start(p.getInputStream(), (OutputStream)out, signal);
+            else if (out instanceof Printer)
+                IoUtils.streamPrint(p.getErrorStream(),(Printer) out, signal);
+
             if (err instanceof OutputStream)
-                IoUtils.TransferThread.start(p.getErrorStream(), (OutputStream)err);
+                IoUtils.TransferThread.start(p.getErrorStream(), (OutputStream)err, signal);
+            else if (err instanceof Printer){
+                IoUtils.streamPrint(p.getErrorStream(),(Printer) err, signal);
+            }
+
             return p;
+        }
+
+        public List<String> getArgs() {
+            return args;
         }
     }
 

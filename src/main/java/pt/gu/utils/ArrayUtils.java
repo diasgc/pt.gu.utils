@@ -1,5 +1,7 @@
 package pt.gu.utils;
 
+import androidx.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -8,8 +10,9 @@ import java.util.function.Predicate;
 public class ArrayUtils {
 
     @SafeVarargs
-    public static <T> void addAll(List<T> list, T... elements){
-        list.addAll(Arrays.asList(elements));
+    public static <T> void addAll(List<T> list, @Nullable T... elements){
+        if (elements != null && elements.length > 0)
+            list.addAll(Arrays.asList(elements));
     }
 
     public static <T> void addIf(List<T> list, boolean condition, T element){

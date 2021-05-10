@@ -73,7 +73,7 @@ public class WebUtils {
                         IoUtils.HttpInputStream is = IoUtils.HttpInputStream.openUrl(u = urls.get(i));
                         // pass CancellationSignal to abort this thread
                         data = IoUtils.toByteArray(is, true, handler.getCancellationSignal());
-                        handler.post(u.getLastPathSegment());
+                        handler.println(u.getLastPathSegment());
                         out.write(data);
                     }
                 } catch (IOException e) {
@@ -83,7 +83,7 @@ public class WebUtils {
                     finalState = Iutils.Progress.ERROR;
                 }
                 IoUtils.closeQuietly(true, out);
-                handler.post(finalState);
+                handler.println(finalState);
             }
         });
     }
@@ -103,7 +103,7 @@ public class WebUtils {
 
             // break if progress gets cancelled or one of the threads throws an error
             if (handler.isCancelled()){
-                handler.post(Iutils.Progress.CANCEL);
+                handler.println(Iutils.Progress.CANCEL);
                 break;
             }
 
@@ -117,7 +117,7 @@ public class WebUtils {
                     try {
                         // pass CancellationSignal to abort all threads, if cancelled
                         byte[] data = IoUtils.toByteArray(is, true, handler.getCancellationSignal());
-                        handler.post(u.getLastPathSegment());
+                        handler.println(u.getLastPathSegment());
 
                         synchronized (chunks) {
                             chunks.put(idx, data);
@@ -128,7 +128,7 @@ public class WebUtils {
                                     out.write(chunks.get(i));
                                 }
                                 IoUtils.closeQuietly(true,out);
-                                handler.post(Iutils.Progress.COMPLETE);
+                                handler.println(Iutils.Progress.COMPLETE);
                             }
 
                         }
@@ -143,15 +143,20 @@ public class WebUtils {
     }
 
     @Nullable
-    private static byte[] downloadData(String u, CallbackHandler listener){
+    public static byte[] downloadData(String u, @Nullable CallbackHandler listener){
         IoUtils.HttpInputStream is = IoUtils.HttpInputStream.openUrl(Uri.parse(u));
         try {
-            byte[] data = IoUtils.toByteArray(is, true, listener.getCancellationSignal());
-            listener.post(u);
-            return data;
+            if (listener != null) {
+                byte[] data = IoUtils.toByteArray(is, true, listener.getCancellationSignal());
+                listener.println(Iutils.Progress.COMPLETE);
+                return data;
+            } else {
+                return IoUtils.toByteArray(is,true);
+            }
         } catch (IOException e) {
             Log.e(TAG, e.toString());
-            listener.post(Iutils.Progress.ERROR);
+            if (listener != null)
+                listener.println(Iutils.Progress.ERROR);
         }
         return null;
     }

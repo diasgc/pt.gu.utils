@@ -288,6 +288,36 @@ public class StringUtils {
         return false;
     }
 
+    public static String toString(List<String> args) {
+        return String.join(" ",args);
+    }
+
+    public static char lastChar(String s) {
+        return s != null && s.length() > 0 ? s.charAt(s.length()-1) : 0;
+    }
+
+    public static boolean isCharInRange(char c, char loChar, char hiChar){
+        return c >= loChar && c <= hiChar;
+    }
+
+    public static int firstCharOutOfRange(String s, char loChar, char hiChar){
+        char[] chars = s.toCharArray();
+        for (int i = 0 ; i < chars.length ; i++) {
+            if (!isCharInRange(chars[i], loChar, hiChar))
+                return i;
+        }
+        return -1;
+    }
+
+    public static int lastCharOutOfRange(String s, char loChar, char hiChar){
+        char[] chars = s.toCharArray();
+        for (int i = chars.length - 1; i >= 0 ; i--) {
+            if (!isCharInRange(chars[i], loChar, hiChar))
+                return i;
+        }
+        return -1;
+    }
+
     public static class StringPrinter extends PrintWriter {
 
 
