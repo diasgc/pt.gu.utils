@@ -56,16 +56,16 @@ public class TypeUtils {
     public static long parseLong(@Nullable String s, @Nullable String unit, long resultIfError) {
         if (s != null && s.length() > 0) {
             if (unit != null && s.endsWith(unit)) {
-                s = s.substring(0, s.length() - 1 - unit.length());
+                s = s.substring(0, s.length() - unit.length());
                 try {
                     if (s.endsWith("k"))
-                        return (long) (1000L * Double.parseDouble(s.substring(0, s.length() - 2)));
+                        return (long) (1000L * Double.parseDouble(s.substring(0, s.length() - 1)));
                     if (s.endsWith("M"))
-                        return (long) (1000000L * Double.parseDouble(s.substring(0, s.length() - 2)));
+                        return (long) (1000000L * Double.parseDouble(s.substring(0, s.length() - 1)));
                     if (s.endsWith("G"))
-                        return (long) (1000000000L * Double.parseDouble(s.substring(0, s.length() - 2)));
+                        return (long) (1000000000L * Double.parseDouble(s.substring(0, s.length() - 1)));
                     if (s.endsWith("T"))
-                        return (long) (1000000000000L * Double.parseDouble(s.substring(0, s.length() - 2)));
+                        return (long) (1000000000000L * Double.parseDouble(s.substring(0, s.length() - 1)));
                 } catch (Exception e) {
                     Log.e(TAG, e.toString());
                     return resultIfError;

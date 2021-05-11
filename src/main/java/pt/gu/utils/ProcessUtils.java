@@ -2,6 +2,7 @@ package pt.gu.utils;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.ParcelFileDescriptor;
 import android.util.Printer;
 
 import androidx.annotation.Nullable;
@@ -28,6 +29,11 @@ public class ProcessUtils {
 
         ProcessBuilder builder;
         List<String> args = new ArrayList<>();
+
+        public Builder(List<String> cmds){
+            args.addAll(cmds);
+            builder = new ProcessBuilder();
+        }
 
         public Builder(String mainCmd){
             args.add(mainCmd);
@@ -103,13 +109,14 @@ public class ProcessUtils {
         }
 
         public Process start(CancellationSignal signal) throws IOException {
+            ParcelFileDescriptor pIn = null;
             if (in != null){
                 if (in instanceof File){
                     builder.redirectInput((File) in);
                 } else if (in instanceof Uri){
                     if ("content".equals(((Uri) in).getScheme())){
                         if (context == null)
-                            throw new IOException("Context not defined for "+in.toString());
+                            throw new IOException("Context not defined for " + in.toString());
                         in = context.getContentResolver().openInputStream((Uri) in);
                     } else if (StringUtils.equalsAny(((Uri) in).getScheme(),"http","https","ftp")){
                         in = IoUtils.HttpInputStream.openUrl((Uri) in);
@@ -119,12 +126,12 @@ public class ProcessUtils {
             if (out != null){
                 if (out instanceof File){
                     builder.redirectOutput((File) out);
-                } else if (in instanceof Uri){
+                } else if (out instanceof Uri){
                     if ("content".equals(((Uri) out).getScheme())){
                         if (context == null)
                             throw new IOException("Context not defined for " + out.toString());
                         out = context.getContentResolver().openOutputStream((Uri) out);
-                    } else if (StringUtils.equalsAny(((Uri) in).getScheme(),"http","https","ftp")){
+                    } else if (StringUtils.equalsAny(((Uri) out).getScheme(),"http","https","ftp")){
                         out = IoUtils.HttpOutputStream.openUrl((Uri) out);
                     }
                 }
@@ -151,6 +158,11 @@ public class ProcessUtils {
 
         public List<String> getArgs() {
             return args;
+        }
+
+        public Builder setDir(String dir) {
+            builder.directory(new File(dir));
+            return this;
         }
     }
 

@@ -54,6 +54,11 @@ public class FileUtils {
     public static final int GB = 1024 * MB;
     public static final long TB = 1024 * GB;
 
+    public static String filenameFromPath(String path) {
+        int i = Math.max(path.lastIndexOf('/'), path.lastIndexOf(":"));
+        return i < 0 ? path : path.substring(i + 1);
+    }
+
     public static String formatSize(long size, String format) {
         if (size <= 0) return "0";
         final String[] units = new String[]{"B", "kB", "MB", "GB", "TB"};

@@ -15,9 +15,9 @@ public class ArrayUtils {
             list.addAll(Arrays.asList(elements));
     }
 
-    public static <T> void addIf(List<T> list, boolean condition, T element){
+    public static <T> void addIf(List<T> list, boolean condition, T... elements){
         if (condition)
-            list.add(element);
+            addAll(list,elements);
     }
 
     public static <T> void addIf(List<T> dst, List<T> src, Predicate<T> filter){

@@ -45,22 +45,33 @@ import java.util.Stack;
 import java.util.TimeZone;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 public class IoUtils {
 
     private static final String TAG = IoUtils.class.getSimpleName();
 
-    public static ParcelFileDescriptor pipeFrom(InputStream is) throws IOException {
-        ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createPipe();
-        TransferThread.start(is,new ParcelFileDescriptor.AutoCloseOutputStream(pipe[1]));
-        return pipe[0];
+    @Nullable
+    public static ParcelFileDescriptor pipeFrom(InputStream is) {
+        try {
+            ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createPipe();
+            TransferThread.start(is, new ParcelFileDescriptor.AutoCloseOutputStream(pipe[1]));
+            return pipe[0];
+        } catch (IOException e){
+            Log.e(TAG,e.toString());
+        }
+        return null;
     }
 
-    public static ParcelFileDescriptor pipeTo(OutputStream os) throws IOException {
-        ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createPipe();
-        TransferThread.start(new ParcelFileDescriptor.AutoCloseInputStream(pipe[0]),os);
-        return pipe[1];
+    @Nullable
+    public static ParcelFileDescriptor pipeTo(OutputStream os) {
+        try {
+            ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createPipe();
+            TransferThread.start(new ParcelFileDescriptor.AutoCloseInputStream(pipe[0]), os);
+            return pipe[1];
+        } catch (IOException e){
+            Log.e(TAG,e.toString());
+        }
+        return null;
     }
 
     public static byte[] toByteArray(InputStream input, boolean autoclose) throws IOException {
@@ -124,12 +135,14 @@ public class IoUtils {
         return sb.toString();
     }
 
-    public static File fileFrom(ParcelFileDescriptor pfd) throws IOException{
-        return new File("/proc/self/fd", String.valueOf(pfd.dup().getFd()));
+    public static File fileFrom(ParcelFileDescriptor pfd, boolean dup) throws IOException {
+        return fileFrom(dup ? pfd.dup().getFd() : pfd.getFd());
     }
 
     public static File fileFrom(int fd) {
-        return new File("/proc/self/fd", String.valueOf(fd));
+        return new File(String.format(Locale.US,"/proc/%d/fd/%d",
+                android.os.Process.myPid(),
+                fd));
     }
 
     public static void streamPrint(InputStream is, Printer out, CancellationSignal signal) throws IOException {
@@ -265,17 +278,12 @@ public class IoUtils {
 
         private static final String TAG = HttpOutputStream.class.getSimpleName();
 
-        private OutputStream os;
-        private HttpURLConnection connection;
+        private final OutputStream os;
+        private final HttpURLConnection connection;
         private boolean isConnected = false;
 
         public static void openUrl(Uri u, HttpOutputStream.Callback callback){
-            Executors.newSingleThreadExecutor().execute(new Runnable() {
-                @Override
-                public void run() {
-                    callback.onConnectionAvailable(HttpOutputStream.openUrl(u));
-                }
-            });
+            Executors.newSingleThreadExecutor().execute(() -> callback.onConnectionAvailable(HttpOutputStream.openUrl(u)));
         }
 
         @Nullable
@@ -340,17 +348,13 @@ public class IoUtils {
 
         private static final String TAG = HttpInputStream.class.getSimpleName();
 
-        private InputStream is;
-        private HttpURLConnection connection;
+        private final InputStream is;
+        private final HttpURLConnection connection;
         private boolean isConnected = false;
 
         public static void openUrl(Uri u, Callback callback){
-            Executors.newSingleThreadExecutor().execute(new Runnable() {
-                @Override
-                public void run() {
-                    callback.onConnectionAvailable(HttpInputStream.openUrl(u));
-                }
-            });
+            Executors.newSingleThreadExecutor()
+                    .execute(() -> callback.onConnectionAvailable(HttpInputStream.openUrl(u)));
         }
 
         @Nullable
@@ -428,7 +432,7 @@ public class IoUtils {
 
     public static class OutputStringWriter extends OutputStream {
 
-        private StringWriter sw;
+        private final StringWriter sw;
         private String eol = "\n";
 
         public OutputStringWriter(){
