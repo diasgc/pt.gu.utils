@@ -1,0 +1,184 @@
+{
+  "audio": {
+    "flac": {
+      "def": {
+        "desc": "Free Lossless Audio Codec",
+        "caps": "delay,small,lossless",
+        "threading": "none",
+        "formats": "s16,s32"
+      },
+      "opts": {
+        "-lpc_coeff_precision": {
+          "desc": "LPC coefficient precision",
+          "values": {
+            "<range>": "0-15"
+          },
+          "default": "15"
+        },
+        "-lpc_type": {
+          "desc": "LPC algorithm",
+          "values": {
+            "auto": -1,
+            "none": 0,
+            "fixed": 1,
+            "levinson": 2,
+            "cholesky": 3
+          },
+          "default": "-1"
+        },
+        "-lpc_passes": {
+          "desc": "Number of passes to use for Cholesky factorization during LPC analysis",
+          "values": {
+            "<range>": "1-65535"
+          },
+          "default": "2"
+        },
+        "-min_partition_order": {
+          "desc": "min partition order",
+          "values": {
+            "auto": "-1",
+            "0": "0",
+            "1": "1",
+            "2": "2",
+            "3": "3",
+            "4": "4",
+            "5": "5",
+            "6": "6",
+            "7": "7",
+            "8": "8"
+          },
+          "default": "-1"
+        },
+        "-max_partition_order": {
+          "desc": "max partition order",
+          "values": {
+            "auto": "-1",
+            "0": "0",
+            "1": "1",
+            "2": "2",
+            "3": "3",
+            "4": "4",
+            "5": "5",
+            "6": "6",
+            "7": "7",
+            "8": "8"
+          },
+          "default": "-1"
+        },
+        "-prediction_order_method": {
+          "desc": "Search method for selecting prediction order",
+          "values": {
+            "auto": "-1",
+            "estimation": "0",
+            "2level": "1",
+            "4level": "2",
+            "8level": "3",
+            "search": "4",
+            "log": "5"
+          },
+          "default": "-1"
+        },
+        "-ch_mode": {
+          "desc": "Stereo decorrelation mode",
+          "values": {
+            "auto": "-1",
+            "indep": "0",
+            "left_side": "1",
+            "right_side": "2",
+            "mid_side": "3"
+          },
+          "default": "-1"
+        },
+        "-exact_rice_parameters": {
+          "desc": "Calculate rice parameters exactly",
+          "values": "bool",
+          "default": "false"
+        },
+        "-multi_dim_quant": {
+          "desc": "Multi-dimensional quantization",
+          "values": "bool",
+          "default": "false"
+        },
+        "-min_prediction_order": {
+          "desc": "min prediction order",
+          "values": {
+            "auto": "-1",
+            "<range>": "0-32"
+          },
+          "default": "-1"
+        },
+        "-max_prediction_order": {
+          "desc": "max prediction order",
+          "values": {
+            "auto": "-1",
+            "<range>": "0-32"
+          },
+          "default": "-1"
+        }
+      }
+    },
+    "libopus": {
+      "def": {
+        "desc": "Opus",
+        "caps": "delay,small",
+        "threading": "none",
+        "samplerates": "48000,24000,16000,12000,8000",
+        "formats": "s16,flt"
+      },
+      "opts": {
+        "-application": {
+          "desc": "Intended application type",
+          "values": {
+            "voip": "2048",
+            "audio": "2049",
+            "lowdelay": "2050"
+          },
+          "default": "2049"
+        },
+        "-frame_duration": {
+          "desc": "Duration of a frame in milliseconds",
+          "values": {
+            "<frange>": "2.5-120"
+          },
+          "default": "20"
+        },
+        "-packet_loss": {
+          "desc": "Expected packet loss percentage",
+          "values": {
+            "<range>": "0-100"
+          },
+          "default": "0"
+        },
+        "-vbr": {
+          "desc": "Variable bit rate mode",
+          "values": {
+            "off": "0",
+            "on": "1",
+            "constrained": "2"
+          },
+          "default": "1"
+        },
+        "-mapping_family": {
+          "desc": "Channel Mapping Family",
+          "values": {
+            "auto": "-1",
+            "<range>": "0-255"
+          },
+          "default": "-1"
+        },
+        "-apply_phase_inv": {
+          "desc": "Apply intensity stereo phase inversion",
+          "values": "bool",
+          "default": "true"
+        }
+      }
+    },
+    "libmp3lame": {},
+    "libvorbis": {
+      "raw": "Encoder libmp3lame [libmp3lame MP3 (MPEG audio layer 3)]:\n    General capabilities: delay small\n    Threading capabilities: none\n    Supported sample rates: 44100 48000 32000 22050 24000 16000 11025 12000 8000\n    Supported sample formats: s32p fltp s16p\n    Supported channel layouts: mono stereo\nlibmp3lame encoder AVOptions:\n  -reservoir         <boolean>    E...A.... use bit reservoir (default true)\n  -joint_stereo      <boolean>    E...A.... use joint stereo (default true)\n  -abr               <boolean>    E...A.... use ABR (default false)"
+    },
+    "aac": {
+      "raw": "Encoder aac [AAC (Advanced Audio Coding)]:\n    General capabilities: delay small\n    Threading capabilities: none\n    Supported sample rates: 96000 88200 64000 48000 44100 32000 24000 22050 16000 12000 11025 8000 7350\n    Supported sample formats: fltp\nAAC encoder AVOptions:\n  -aac_coder         <int>        E...A.... Coding algorithm (from 0 to 2) (default fast)\n     anmr                         E...A.... ANMR method\n     twoloop                      E...A.... Two loop searching method\n     fast                         E...A.... Default fast search\n  -aac_ms            <boolean>    E...A.... Force M/S stereo coding (default auto)\n  -aac_is            <boolean>    E...A.... Intensity stereo coding (default true)\n  -aac_pns           <boolean>    E...A.... Perceptual noise substitution (default true)\n  -aac_tns           <boolean>    E...A.... Temporal noise shaping (default true)\n  -aac_ltp           <boolean>    E...A.... Long term prediction (default false)\n  -aac_pred          <boolean>    E...A.... AAC-Main prediction (default false)\n  -aac_pce           <boolean>    E...A.... Forces the use of PCEs (default false)"
+    }
+  }
+}
