@@ -1,6 +1,8 @@
 package pt.gu.utils;
 
+import android.util.ArrayMap;
 import android.util.Log;
+import android.util.SparseLongArray;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.Nullable;
@@ -10,6 +12,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class TypeUtils {
 
@@ -29,6 +34,20 @@ public class TypeUtils {
         return resultIfError;
     }
 
+    /**
+     * Calculates Estimated Time of Arrival
+     * @param startTime System.currentTimeMillis() when started
+     * @param duration Duration of the event
+     * @param time current progress time in millis (startTime =0, endTime = duration)
+     * @return Estimated Time of Arrival, or 0 if not positive time
+     */
+    public static long eta(long startTime, long duration, long time){
+        // int progress = (int) (time * 100 / duration);
+        // long eta = System.currentTimeMillis() - startTime;
+        // eta = eta * 100 / progress - eta;
+        return time > 0 ? (System.currentTimeMillis() - startTime) * (duration - time) / time : 0;
+    }
+
     public static long parseDate(@Nullable String date, @Nullable SimpleDateFormat sdf, long resultIfError){
         if (date != null && sdf != null) {
             try {
@@ -41,68 +60,56 @@ public class TypeUtils {
         return resultIfError;
     }
 
-    public static long parseLong(@Nullable String s, long resultIfError){
-        try {
-            return s == null ? resultIfError : (s = s.trim()).charAt(0) == '0' && s.length() > 2 ?
-                    s.charAt(1) == 'x' ? Long.parseLong(s.substring(2),16) :
-                            s.charAt(1) == 'b' ? Long.parseLong(s.substring(2),2) :
-                                    Long.parseLong(s) : Long.parseLong(s);
-        } catch (Exception ex){
-            ex.printStackTrace();
-            return resultIfError;
-        }
-    }
+    private static final Pattern DOUBLE_UNITS_PATTERN = Pattern.compile("([0-9]+\\.[0-9]+)\\s*([Y|Z|E|P|T|G|M|k|c|m|µ|n|p|f])([a-zA-z]+)");
+    private static final ArrayMap<String,Double> UNITS = new ArrayMap<>();
+    static {
+        UNITS.put("Z",1.0E21);
+        UNITS.put("E",1.0E18);
+        UNITS.put("P",1.0E15);
+        UNITS.put("T",1.0E12);
+        UNITS.put("G",1.0E9);
+        UNITS.put("M",1.0E6);
+        UNITS.put("k",1.0E3);
+        UNITS.put("c",1.0E-2);
+        UNITS.put("m",1.0E-3);
+        UNITS.put("µ",1.0E-6);
+        UNITS.put("n",1.0E-9);
+        UNITS.put("p",1.0E-12);
+        UNITS.put("f",1.0E-15);
+    };
 
-    public static long parseLong(@Nullable String s, @Nullable String unit, long resultIfError) {
+    /**
+     *
+     * @param s string to be evaluated, may be null (resultIfError value returned)
+     * @param unit accepted unit in 's' otherwise returns 'resultIfError';
+     *             if null, any unit will be accepted.
+     * @param resultIfError returned value if s is null or invalid numberformat
+     * @return double parsed value of given value-units string
+     */
+    public static double parseUnit(@Nullable String s, @Nullable String unit, double resultIfError){
         if (s != null && s.length() > 0) {
-            if (unit != null && s.endsWith(unit)) {
-                s = s.substring(0, s.length() - unit.length());
-                try {
-                    if (s.endsWith("k"))
-                        return (long) (1000L * Double.parseDouble(s.substring(0, s.length() - 1)));
-                    if (s.endsWith("M"))
-                        return (long) (1000000L * Double.parseDouble(s.substring(0, s.length() - 1)));
-                    if (s.endsWith("G"))
-                        return (long) (1000000000L * Double.parseDouble(s.substring(0, s.length() - 1)));
-                    if (s.endsWith("T"))
-                        return (long) (1000000000000L * Double.parseDouble(s.substring(0, s.length() - 1)));
-                } catch (Exception e) {
-                    Log.e(TAG, e.toString());
+            Matcher m = DOUBLE_UNITS_PATTERN.matcher(s);
+            double result;
+            if (m.find()){
+                // Get unit from 's'
+                String s1 = m.group(3);
+                // Return 'resultIfError' if 'unit' is defined but different from given in 's'
+                if (unit != null && !unit.equals(s1))
                     return resultIfError;
-                }
-            }
-            int i = s.length();
-            StringBuilder u = new StringBuilder();
-            char c;
-            while ((c = s.charAt(--i)) > 0x39) {
-                u.append(c);
-            }
-            if (u.length() > 0) {
-                u.reverse();
-                s = s.substring(0, i).trim();
+                // Get value from 's'
+                s1 = m.group(1);
                 try {
-                    switch (u.charAt(0)) {
-                        case 'k':
-                            return Integer.parseInt(s) * 1000;
-                        case 'M':
-                            return Integer.parseInt(s) * 1000000;
+                    // Try parse value or assign it to 0 if is null or empty
+                    if ((result = s1 != null && s1.length() > 0 ? Double.parseDouble(s1) : 0) != 0){
+                        // Get unit prefix from 's'
+                        if ((s1 = m.group(2)) != null && UNITS.get(s1) != null) {
+                            // Apply it to result, if exists
+                            result *= UNITS.get(s1);
+                        }
                     }
-                } catch (Exception e) {
-                    Log.e(TAG, e.toString());
-                    return resultIfError;
-                }
-            }
-            int radix = 10;
-            if (s.charAt(0) == '0') {
-                if (s.charAt(1) == 'x') {
-                    radix = 16;
-                    s = s.substring(2);
-                } else if (s.charAt(1) == 'b') {
-                    radix = 2;
-                    s = s.substring(2);
-                } else {
-                    radix = 8;
-                    s = s.substring(1);
+                    return result;
+                } catch (Exception e){
+                    Log.e(TAG, String.format("Tried to parse double with units from '%s': %s",s, e.toString()));
                 }
             }
         }
@@ -110,24 +117,47 @@ public class TypeUtils {
     }
 
     public static int parseInt(@Nullable String s, int resultIfError){
-        try {
-            return s == null ? resultIfError : (s = s.trim()).charAt(0) == '0' && s.length() > 2 ?
-                    s.charAt(1) == 'x' ? Integer.parseInt(s.substring(2), 16) :
-                            s.charAt(1) == 'b' ? Integer.parseInt(s.substring(2), 2) :
-                                    Integer.parseInt(s) : Integer.parseInt(s);
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        return (int) parseLong(s,resultIfError);
+    }
+
+    public static long parseLong(@Nullable String s, long resultIfError){
+        if (s != null && (s = s.trim()).length() > 0) {
+            try {
+                if (s.charAt(0) == '0'){
+                    if (s.charAt(1) == 'x')
+                        return Long.parseLong(s.substring(2),16);
+                    if (s.charAt(1) == 'b')
+                        return Long.parseLong(s.substring(2),2);
+                    return Long.parseLong(s.substring(2),8);
+                }
+                return Long.parseLong(s);
+            } catch (Exception e) {
+                Log.e(TAG, String.format("Tried to parse long from '%s': %s",s, e.toString()));
+            }
         }
         return resultIfError;
     }
 
     public static float parseFloat(@Nullable String s, float resultIfError){
-        try {
-            return s == null ? resultIfError : Float.parseFloat(s.trim());
-        } catch (Exception ex){
-            ex.printStackTrace();
-            return resultIfError;
+        if (s != null && (s = s.trim()).length() > 0) {
+            try {
+                return Float.parseFloat(s);
+            } catch (Exception e) {
+                Log.e(TAG, String.format("Tried to parse float from '%s': %s",s, e.toString()));
+            }
         }
+        return resultIfError;
+    }
+
+    public static double parseDouble(@Nullable String s, double resultIfError){
+        if (s != null && (s = s.trim()).length() > 0) {
+            try {
+                return Double.parseDouble(s);
+            } catch (Exception e) {
+                Log.e(TAG, String.format("Tried to parse double from '%s': %s",s, e.toString()));
+            }
+        }
+        return resultIfError;
     }
 
     public static int[] toIntArray(List<Integer> list){
@@ -175,6 +205,12 @@ public class TypeUtils {
 
     public static int boolMul(boolean a, boolean b){
         return (a ? 1 : 0) + (b ? 1 : 0);
+    }
+
+    public static String formatTime(String timeFormat, long time) {
+        final SimpleDateFormat sdf = new SimpleDateFormat(timeFormat,Locale.US);
+        sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+        return sdf.format(time);
     }
 
     public static class BitBuilder {

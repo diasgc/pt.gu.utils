@@ -1,10 +1,15 @@
 package pt.gu.utils;
 
 import androidx.annotation.Nullable;
+import androidx.arch.core.util.Function;
+import androidx.collection.ArrayMap;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 public class ArrayUtils {
@@ -15,6 +20,7 @@ public class ArrayUtils {
             list.addAll(Arrays.asList(elements));
     }
 
+    @SafeVarargs
     public static <T> void addIf(List<T> list, boolean condition, T... elements){
         if (condition)
             addAll(list,elements);
@@ -27,6 +33,23 @@ public class ArrayUtils {
         }
     }
 
+    public static <I,O> O[] toArrayOf(Collection<I> in, Function<I,O> fn) {
+        ArrayList<O> out = new ArrayList<>();
+        for (I i : in)
+            out.add(fn.apply(i));
+        return out.toArray((O[])Array.newInstance(out.getClass().getComponentType(),out.size()));
+    }
+
+    public static <K,V> Map<V, K> swapMap(Map<K, V> map) {
+        Map<V,K> out = new ArrayMap<>();
+        List<V> vl = new ArrayList<>(map.values());
+        List<K> kl = new ArrayList<>(map.keySet());
+        for (int i = 0 ; i < map.size() ; i++){
+            out.put(vl.get(i),kl.get(i));
+        }
+        return out;
+    }
+
     public static class ListX<T> extends ArrayList<T> {
 
         @SafeVarargs
@@ -36,10 +59,19 @@ public class ArrayUtils {
             return this;
         }
 
-        public ListX<T> add(boolean condition, T e){
+        @SafeVarargs
+        public final ListX<T> add(boolean condition, T... e){
             if (condition)
                 add(e);
             return this;
+        }
+
+        public <E> E[] toArrayOf(Function<T,E> fn) {
+            ArrayList<E> out = new ArrayList<>();
+            for (T i : this)
+                out.add(fn.apply(i));
+            Class<?> cls = out.getClass().getComponentType();
+            return cls == null ? null : out.toArray((E[])Array.newInstance(cls,size()));
         }
     }
 

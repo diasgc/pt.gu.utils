@@ -2,11 +2,17 @@ package pt.gu.utils;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.media.AudioFormat;
+import android.media.AudioRecord;
+import android.media.MediaRecorder;
+import android.media.audiofx.AutomaticGainControl;
+import android.media.audiofx.NoiseSuppressor;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.util.Printer;
 
+import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.os.CancellationSignal;
@@ -269,6 +275,101 @@ public class IoUtils {
     public static void streamCopy(InputStream is, OutputStream os, @Nullable ProgressListener listener) {
         TransferThread.start(is,os,listener);
     }
+
+    public static class AudioInputStream extends InputStream {
+
+        private int audioSource = MediaRecorder.AudioSource.DEFAULT;
+        private int sampleRate = 44100;
+        private int channelConfig = AudioFormat.CHANNEL_IN_STEREO;
+        private int audioFormat;
+        private boolean useAgc = false;
+        private boolean useNs = false;
+        private AudioRecord mRecord;
+        private AutomaticGainControl mAgc;
+        private NoiseSuppressor mNoiseSup;
+
+        public AudioInputStream(){}
+
+        public AudioInputStream(int audioSource, int channelConfig, int sampleRate, int audioFormat){
+            this.audioSource = audioSource;
+            this.channelConfig = channelConfig;
+            this.sampleRate = sampleRate;
+            this.audioFormat = audioFormat;
+        }
+
+
+        public AudioInputStream setSource(int source){
+            audioSource = source;
+            return this;
+        }
+
+        public AudioInputStream setSampleRate(int samplerate){
+            this.sampleRate = samplerate;
+            return this;
+        }
+
+        public AudioInputStream setChannelConfig(int channelconfig){
+            this.channelConfig = channelconfig;
+            return this;
+        }
+
+        public AudioInputStream setAudioFormat(int audioformat){
+            this.audioFormat = audioformat;
+            return this;
+        }
+
+        public AudioInputStream useAgc(boolean agc){
+            this.useAgc = agc;
+            return this;
+        }
+
+        public AudioInputStream useNoiseSuppression(boolean useNs){
+            this.useNs = useNs;
+            return this;
+        }
+
+        public void start(){
+            int buff = AudioRecord.getMinBufferSize(sampleRate,channelConfig,audioFormat) * 3;
+            mRecord = new AudioRecord(audioSource,sampleRate,channelConfig,audioFormat,buff);
+            mRecord.startRecording();
+            if (useAgc && (mAgc = AutomaticGainControl.create(mRecord.getAudioSessionId())) != null)
+                mAgc.setEnabled(true);
+            if (useNs && (mNoiseSup = NoiseSuppressor.create(mRecord.getAudioSessionId())) != null)
+                mNoiseSup.setEnabled(true);
+        }
+
+        @Override
+        public int read() throws IOException {
+            return read(new byte[1],0,1);
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            return mRecord.read(b,off,len);
+        }
+
+        @Override
+        public void close() throws IOException {
+            if (mAgc != null && mAgc.getEnabled()) {
+                mAgc.setEnabled(false);
+                mAgc.release();
+                mAgc = null;
+            }
+            if (mNoiseSup != null && mNoiseSup.getEnabled()){
+                mNoiseSup.setEnabled(false);
+                mNoiseSup.release();
+                mNoiseSup = null;
+            }
+            mRecord.stop();
+            mRecord.release();
+            super.close();
+        }
+    }
+
+
+
+
+
 
     public static class HttpOutputStream extends OutputStream {
 
