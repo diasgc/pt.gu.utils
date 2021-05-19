@@ -203,6 +203,10 @@ public class IoUtils {
         }
     }
 
+    public static void pipe(InputStream is, OutputStream os, CancellationSignal signal) {
+
+    }
+
 
     public static boolean streamCopy(InputStream is, File dst, @Nullable ProgressListener listener) {
         try {
@@ -278,10 +282,6 @@ public class IoUtils {
 
     public static class AudioInputStream extends InputStream {
 
-        private int audioSource = MediaRecorder.AudioSource.DEFAULT;
-        private int sampleRate = 44100;
-        private int channelConfig = AudioFormat.CHANNEL_IN_STEREO;
-        private int audioFormat;
         private boolean useAgc = false;
         private boolean useNs = false;
         private AudioRecord mRecord;
@@ -291,32 +291,14 @@ public class IoUtils {
         public AudioInputStream(){}
 
         public AudioInputStream(int audioSource, int channelConfig, int sampleRate, int audioFormat){
-            this.audioSource = audioSource;
-            this.channelConfig = channelConfig;
-            this.sampleRate = sampleRate;
-            this.audioFormat = audioFormat;
+            this.mRecord = new AudioRecord(audioSource,sampleRate,channelConfig,audioFormat,
+                    AudioRecord.getMinBufferSize(sampleRate,channelConfig,audioFormat) * 3);
         }
 
-
-        public AudioInputStream setSource(int source){
-            audioSource = source;
-            return this;
+        public AudioInputStream(AudioRecord ar){
+            this.mRecord = ar;
         }
 
-        public AudioInputStream setSampleRate(int samplerate){
-            this.sampleRate = samplerate;
-            return this;
-        }
-
-        public AudioInputStream setChannelConfig(int channelconfig){
-            this.channelConfig = channelconfig;
-            return this;
-        }
-
-        public AudioInputStream setAudioFormat(int audioformat){
-            this.audioFormat = audioformat;
-            return this;
-        }
 
         public AudioInputStream useAgc(boolean agc){
             this.useAgc = agc;
@@ -329,13 +311,17 @@ public class IoUtils {
         }
 
         public void start(){
-            int buff = AudioRecord.getMinBufferSize(sampleRate,channelConfig,audioFormat) * 3;
-            mRecord = new AudioRecord(audioSource,sampleRate,channelConfig,audioFormat,buff);
             mRecord.startRecording();
             if (useAgc && (mAgc = AutomaticGainControl.create(mRecord.getAudioSessionId())) != null)
                 mAgc.setEnabled(true);
             if (useNs && (mNoiseSup = NoiseSuppressor.create(mRecord.getAudioSessionId())) != null)
                 mNoiseSup.setEnabled(true);
+
+        }
+
+        public void start(OutputStream os, CancellationSignal signal){
+            start();
+            TransferThread.start(this, os, signal);
         }
 
         @Override
