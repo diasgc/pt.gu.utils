@@ -220,42 +220,42 @@
       },
       "-aac_ms": {
         "desc": "Force M/S stereo coding",
-        "values": "bool"
+        "values": "bool",
         "default": "true"
       },
       "-aac_is": {
         "desc": "Intensity stereo coding",
-        "values": "bool"
+        "values": "bool",
         "default": "true"
       },
       "-aac_pns": {
         "desc": "Perceptual noise substitution",
-        "values": "bool"
+        "values": "bool",
         "default": "true"
       },
       "-aac_tns": {
         "desc": "Temporal noise shaping",
-        "values": "bool"
+        "values": "bool",
         "default": "true"
       },
       "-aac_ltp": {
         "desc": "Long term prediction",
-        "values": "bool"
+        "values": "bool",
         "default": "false"
       },
       "-aac_ltp": {
         "desc": "Long term prediction",
-        "values": "bool"
+        "values": "bool",
         "default": "false"
       },
       "-aac_pred": {
         "desc": "AAC-Main prediction",
-        "values": "bool"
+        "values": "bool",
         "default": "false"
       },
       "-aac_pce": {
         "desc": "Forces the use of PCEs",
-        "values": "bool"
+        "values": "bool",
         "default": "false"
       }
     },
