@@ -182,65 +182,62 @@
           "values": "bool",
           "default": "false"
         }
+      }
     },
     "aac": {
-    "def": {
-      "desc": "AAC (Advanced Audio Coding)",
-      "caps": "delay,small",
-      "threading": "none",
-      "samplerates": "96000,88200,64000,48000,44100,32000,22050,24000,16000,11025,12000,8000,7350",
-      "formats": "fltp",
-      "channels": "mono,stereo"
-    },
-    "opts": {
-      "-aac_coder": {
-        "desc": "Coding algorithm",
-        "values": {
-          "anmr": "0",
-          "twoloop": "1",
-          "fast": "2"
+      "def": {
+        "desc": "AAC (Advanced Audio Coding)",
+        "caps": "delay,small",
+        "threading": "none",
+        "samplerates": "96000,88200,64000,48000,44100,32000,22050,24000,16000,11025,12000,8000,7350",
+        "formats": "fltp",
+        "channels": "mono,stereo"
+      },
+      "opts": {
+        "-aac_coder": {
+          "desc": "Coding algorithm",
+          "values": {
+            "anmr": "0",
+            "twoloop": "1",
+            "fast": "2"
+          },
+          "default": "2"
         },
-        "default": "2"
-      },
-      "-aac_ms": {
-        "desc": "Force M/S stereo coding",
-        "values": "bool",
-        "default": "true"
-      },
-      "-aac_is": {
-        "desc": "Intensity stereo coding",
-        "values": "bool",
-        "default": "true"
-      },
-      "-aac_pns": {
-        "desc": "Perceptual noise substitution",
-        "values": "bool",
-        "default": "true"
-      },
-      "-aac_tns": {
-        "desc": "Temporal noise shaping",
-        "values": "bool",
-        "default": "true"
-      },
-      "-aac_ltp": {
-        "desc": "Long term prediction",
-        "values": "bool",
-        "default": "false"
-      },
-      "-aac_ltp": {
-        "desc": "Long term prediction",
-        "values": "bool",
-        "default": "false"
-      },
-      "-aac_pred": {
-        "desc": "AAC-Main prediction",
-        "values": "bool",
-        "default": "false"
-      },
-      "-aac_pce": {
-        "desc": "Forces the use of PCEs",
-        "values": "bool",
-        "default": "false"
+        "-aac_ms": {
+          "desc": "Force M/S stereo coding",
+          "values": "bool",
+          "default": "true"
+        },
+        "-aac_is": {
+          "desc": "Intensity stereo coding",
+          "values": "bool",
+          "default": "true"
+        },
+        "-aac_pns": {
+          "desc": "Perceptual noise substitution",
+          "values": "bool",
+          "default": "true"
+        },
+        "-aac_tns": {
+          "desc": "Temporal noise shaping",
+          "values": "bool",
+          "default": "true"
+        },
+        "-aac_ltp": {
+          "desc": "Long term prediction",
+          "values": "bool",
+          "default": "false"
+        },
+        "-aac_pred": {
+          "desc": "AAC-Main prediction",
+          "values": "bool",
+          "default": "false"
+        },
+        "-aac_pce": {
+          "desc": "Forces the use of PCEs",
+          "values": "bool",
+          "default": "false"
+        }
       }
     },
     "libvorbis": {}
