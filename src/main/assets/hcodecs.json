@@ -173,12 +173,92 @@
         }
       }
     },
-    "libmp3lame": {},
-    "libvorbis": {
-      "raw": "Encoder libmp3lame [libmp3lame MP3 (MPEG audio layer 3)]:\n    General capabilities: delay small\n    Threading capabilities: none\n    Supported sample rates: 44100 48000 32000 22050 24000 16000 11025 12000 8000\n    Supported sample formats: s32p fltp s16p\n    Supported channel layouts: mono stereo\nlibmp3lame encoder AVOptions:\n  -reservoir         <boolean>    E...A.... use bit reservoir (default true)\n  -joint_stereo      <boolean>    E...A.... use joint stereo (default true)\n  -abr               <boolean>    E...A.... use ABR (default false)"
+    "libmp3lame": {
+      "def": {
+        "desc": "MP3 (MPEG audio layer 3)",
+        "caps": "delay,small",
+        "threading": "none",
+        "samplerates": "48000,44100,32000,22050,24000,16000,11025,12000,8000",
+        "formats": "s32p,fltp,s16p",
+        "channels": "mono,stereo"
+      },
+      "opts": {
+        "-reservoir": {
+          "desc": "use bit reservoir",
+          "values": "bool",
+          "default": "true"
+        },
+        "-joint_stereo": {
+          "desc": "use joint stereo",
+          "values": "bool",
+          "default": "true"
+        },
+        "-abr": {
+          "desc": "use ABR",
+          "values": "bool",
+          "default": "false"
+        }
     },
     "aac": {
-      "raw": "Encoder aac [AAC (Advanced Audio Coding)]:\n    General capabilities: delay small\n    Threading capabilities: none\n    Supported sample rates: 96000 88200 64000 48000 44100 32000 24000 22050 16000 12000 11025 8000 7350\n    Supported sample formats: fltp\nAAC encoder AVOptions:\n  -aac_coder         <int>        E...A.... Coding algorithm (from 0 to 2) (default fast)\n     anmr                         E...A.... ANMR method\n     twoloop                      E...A.... Two loop searching method\n     fast                         E...A.... Default fast search\n  -aac_ms            <boolean>    E...A.... Force M/S stereo coding (default auto)\n  -aac_is            <boolean>    E...A.... Intensity stereo coding (default true)\n  -aac_pns           <boolean>    E...A.... Perceptual noise substitution (default true)\n  -aac_tns           <boolean>    E...A.... Temporal noise shaping (default true)\n  -aac_ltp           <boolean>    E...A.... Long term prediction (default false)\n  -aac_pred          <boolean>    E...A.... AAC-Main prediction (default false)\n  -aac_pce           <boolean>    E...A.... Forces the use of PCEs (default false)"
-    }
+    "def": {
+      "desc": "AAC (Advanced Audio Coding)",
+      "caps": "delay,small",
+      "threading": "none",
+      "samplerates": "96000,88200,64000,48000,44100,32000,22050,24000,16000,11025,12000,8000,7350",
+      "formats": "fltp",
+      "channels": "mono,stereo"
+    },
+    "opts": {
+      "-aac_coder": {
+        "desc": "Coding algorithm",
+        "values": {
+          "anmr": "0",
+          "twoloop": "1",
+          "fast": "2"
+        },
+        "default": "2"
+      },
+      "-aac_ms": {
+        "desc": "Force M/S stereo coding",
+        "values": "bool"
+        "default": "true"
+      },
+      "-aac_is": {
+        "desc": "Intensity stereo coding",
+        "values": "bool"
+        "default": "true"
+      },
+      "-aac_pns": {
+        "desc": "Perceptual noise substitution",
+        "values": "bool"
+        "default": "true"
+      },
+      "-aac_tns": {
+        "desc": "Temporal noise shaping",
+        "values": "bool"
+        "default": "true"
+      },
+      "-aac_ltp": {
+        "desc": "Long term prediction",
+        "values": "bool"
+        "default": "false"
+      },
+      "-aac_ltp": {
+        "desc": "Long term prediction",
+        "values": "bool"
+        "default": "false"
+      },
+      "-aac_pred": {
+        "desc": "AAC-Main prediction",
+        "values": "bool"
+        "default": "false"
+      },
+      "-aac_pce": {
+        "desc": "Forces the use of PCEs",
+        "values": "bool"
+        "default": "false"
+      }
+    },
+    "libvorbis": {}
   }
 }
