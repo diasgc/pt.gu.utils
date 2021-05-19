@@ -240,6 +240,22 @@
         }
       }
     },
-    "libvorbis": {}
+    "libvorbis": {
+      "def": {
+        "desc": "libvorbis",
+        "caps": "delay,small",
+        "threading": "none",
+        "formats": "fltp"
+      },
+      "opts": {
+        "-iblock": {
+          "desc": "use bit reservoir",
+          "values": {
+            "<range>": "-15-0"
+          },
+          "default": "0"
+        }
+      }
+    }
   }
 }
