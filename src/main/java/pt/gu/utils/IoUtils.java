@@ -2,9 +2,7 @@ package pt.gu.utils;
 
 import android.content.ContentResolver;
 import android.content.Context;
-import android.media.AudioFormat;
 import android.media.AudioRecord;
-import android.media.MediaRecorder;
 import android.media.audiofx.AutomaticGainControl;
 import android.media.audiofx.NoiseSuppressor;
 import android.net.Uri;
@@ -12,7 +10,6 @@ import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.util.Printer;
 
-import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.os.CancellationSignal;
@@ -51,6 +48,7 @@ import java.util.Stack;
 import java.util.TimeZone;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class IoUtils {
 
@@ -155,6 +153,7 @@ public class IoUtils {
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
         for (String s; !signal.isCanceled() && null != (s = br.readLine());)
             out.println(s);
+        closeQuietly(is);
     }
 
     @Nullable
@@ -204,7 +203,32 @@ public class IoUtils {
     }
 
     public static void pipe(InputStream is, OutputStream os, CancellationSignal signal) {
+        final int bufferSize = 4096;
+        Executors.newSingleThreadExecutor().execute(() -> {
+            byte[] buffer = new byte[bufferSize];
+            try {
+                for(int l ; !signal.isCanceled() && (l = is.read(buffer)) > 0 ;)
+                    os.write(buffer,0,l);
+            } catch (IOException ignore){}
+            closeQuietly(true,is,os);
+        });
+    }
 
+    public static void pipeSample(InputStream is, OutputStream os, Consumer<byte[]> sample,
+                                  int sampleSize, int bufferSize, CancellationSignal signal){
+        Executors.newSingleThreadExecutor().execute(() -> {
+            byte[] buffer = new byte[bufferSize];
+            try {
+                byte[] smp = new byte[sampleSize];
+                for(int l ; !signal.isCanceled() && (l = is.read(buffer)) > 0 ;) {
+                    if (os != null)
+                        os.write(buffer, 0, l);
+                    System.arraycopy(buffer,0,smp,0, Math.min(l, sampleSize));
+                    sample.accept(smp);
+                }
+            } catch (IOException ignore){}
+            closeQuietly(true,is,os);
+        });
     }
 
 
@@ -284,11 +308,9 @@ public class IoUtils {
 
         private boolean useAgc = false;
         private boolean useNs = false;
-        private AudioRecord mRecord;
+        private final AudioRecord mRecord;
         private AutomaticGainControl mAgc;
         private NoiseSuppressor mNoiseSup;
-
-        public AudioInputStream(){}
 
         public AudioInputStream(int audioSource, int channelConfig, int sampleRate, int audioFormat){
             this.mRecord = new AudioRecord(audioSource,sampleRate,channelConfig,audioFormat,
@@ -321,16 +343,21 @@ public class IoUtils {
 
         public void start(OutputStream os, CancellationSignal signal){
             start();
-            TransferThread.start(this, os, signal);
+            pipe(this,os,signal);
+        }
+
+        public void start(OutputStream os, Consumer<byte[]> sample, int sz, int buffSize, CancellationSignal signal){
+            start();
+            pipeSample(this,os,sample, sz, Math.max(sz,buffSize), signal);
         }
 
         @Override
-        public int read() throws IOException {
+        public int read() {
             return read(new byte[1],0,1);
         }
 
         @Override
-        public int read(byte[] b, int off, int len) throws IOException {
+        public int read(byte[] b, int off, int len) {
             return mRecord.read(b,off,len);
         }
 
@@ -351,9 +378,6 @@ public class IoUtils {
             super.close();
         }
     }
-
-
-
 
 
 
@@ -517,6 +541,7 @@ public class IoUtils {
         }
     }
 
+
     public static class OutputStringWriter extends OutputStream {
 
         private final StringWriter sw;
@@ -530,6 +555,11 @@ public class IoUtils {
             this.sw = sw;
         }
 
+        public OutputStringWriter eol(String eol){
+            this.eol = eol;
+            return this;
+        }
+
         public void writeLine(String line){
             sw.append(line).append(eol);
         }
@@ -539,17 +569,17 @@ public class IoUtils {
         }
 
         @Override
-        public void write(int b) throws IOException {
+        public void write(int b) {
             sw.write((char) b);
         }
 
         @Override
-        public void write(byte[] b) throws IOException {
+        public void write(byte[] b) {
             sw.write(new String(b));
         }
 
         @Override
-        public void write(byte[] b, int off, int len) throws IOException {
+        public void write(byte[] b, int off, int len) {
             byte[] b2 = new byte[len];
             System.arraycopy(b, off, b2,0, len);
             write(b2);
@@ -561,6 +591,7 @@ public class IoUtils {
             return sw.toString();
         }
     }
+
 
     public static class BinaryReader extends FileInputStream {
 
@@ -598,8 +629,8 @@ public class IoUtils {
                 for (int i = 0 ; i < l ; i++)
                     f.readULong(8);
                 Log.i("TEST ULong8 ",""+(System.currentTimeMillis() - t0));
-            } catch (IOException ignore){
-                ignore.printStackTrace();
+            } catch (IOException e){
+                e.printStackTrace();
             }
         }
 
@@ -641,11 +672,11 @@ public class IoUtils {
             return i != len ? new String(b).substring(0,i) : new String(b);
         }
 
-        private final short swap(short int16){
+        private short swap(short int16){
             return (short)(int16 >> 8 | int16 << 8);
         }
 
-        private final int swap(int int32){
+        private int swap(int int32){
             return int32 >> 16 | int32 << 16;
         }
 
@@ -693,15 +724,15 @@ public class IoUtils {
             if (read(b) == -1)
                 throw new EOFException();
             if (isLE)
-                return b[7] << 56 | b[6] << 48 |
-                        b[5] << 40 | b[4] << 32 |
+                return  (long)b[7] << 56 | (long)b[6] << 48 |
+                        (long)b[5] << 40 | (long)b[4] << 32 |
                         b[3] << 24 | b[2] << 16 |
-                        b[1] << 8 | b[0] << 0;
+                        b[1] << 8 | b[0];
             else
-                return b[0] << 56 | b[1] << 48 |
-                        b[2] << 40 | b[3] << 32 |
+                return (long)b[0] << 56 | (long)b[1] << 48 |
+                        (long)b[2] << 40 | (long)b[3] << 32 |
                         b[4] << 24 | b[5] << 16 |
-                        b[6] << 8 | b[7] << 0;
+                        b[6] << 8 | b[7];
         }
 
         public final long readUInt64() throws IOException{
@@ -712,12 +743,12 @@ public class IoUtils {
                 return (b[7] & 0xffL) << 56 | (b[6] & 0xffL) << 48 |
                         (b[5] & 0xffL) << 40 | (b[4] & 0xffL) << 32 |
                         (b[3] & 0xffL) << 24 | (b[2] & 0xffL) << 16 |
-                        (b[1] & 0xffL) << 8 | (b[0] & 0xffL) << 0;
+                        (b[1] & 0xffL) << 8 | (b[0] & 0xffL);
             else
                 return (b[0] & 0xffL) << 56 | (b[1] & 0xffL) << 48 |
                     (b[2] & 0xffL) << 40 | (b[3] & 0xffL) << 32 |
                     (b[4] & 0xffL) << 24 | (b[5] & 0xffL) << 16 |
-                    (b[6] & 0xffL) << 8 | (b[7] & 0xffL) << 0;
+                    (b[6] & 0xffL) << 8 | (b[7] & 0xffL);
         }
 
         public final long readQWord() throws IOException {
@@ -733,13 +764,13 @@ public class IoUtils {
                         (b[3] & 0xFFL) << 32 |
                         (b[2] & 0xFFL) << 16 |
                         (b[1] & 0xFFL) <<  8 |
-                        (b[0] & 0xFFL) <<  0;
+                        (b[0] & 0xFFL);
             else
                 return (b[0] & 0xFFL) << 40 |
                     (b[2] & 0xFFL) << 32 |
                     (b[3] & 0xFFL) << 16 |
                     (b[4] & 0xFFL) <<  8 |
-                    (b[5] & 0xFFL) <<  0;
+                        (b[5] & 0xFFL);
         }
 
 
@@ -751,12 +782,12 @@ public class IoUtils {
                 return (b[3] & 0xFFL) << 24 |
                         (b[2] & 0xFFL) << 16 |
                         (b[1] & 0xFFL) << 8 |
-                        (b[0] & 0xFFL) << 0;
+                        (b[0] & 0xFFL);
             else
                 return (b[0] & 0xFFL) << 24 |
                         (b[1] & 0xFFL) << 16 |
                         (b[2] & 0xFFL) << 8 |
-                        (b[3] & 0xFFL) << 0;
+                        (b[3] & 0xFFL);
         }
 
         private static final int iLSL(byte b, int bits){
@@ -788,9 +819,9 @@ public class IoUtils {
                 throw new EOFException();
             //return peekInt(b,0,ByteOrder.BIG_ENDIAN);
             if (isLE)
-                return b[3] << 24 | b[2] << 16 | b[1] << 8 | b[0] << 0;
+                return b[3] << 24 | b[2] << 16 | b[1] << 8 | b[0];
             else
-                return b[0] << 24 | b[1] << 16 | b[2] << 8 | b[3] << 0;
+                return b[0] << 24 | b[1] << 16 | b[2] << 8 | b[3];
         }
 
         public final int readUInt16() throws IOException {
@@ -798,9 +829,9 @@ public class IoUtils {
             if (read(b) < 0)
                 throw new EOFException();
             if (isLE)
-                return (b[1] & 0xFF) << 8 | (b[0] & 0xFF) << 0;
+                return (b[1] & 0xFF) << 8 | (b[0] & 0xFF);
             else
-                return (b[0] & 0xFF) << 8 | (b[1] & 0xFF) << 0;
+                return (b[0] & 0xFF) << 8 | (b[1] & 0xFF);
         }
 
         public final short readInt16() throws IOException {
@@ -808,9 +839,9 @@ public class IoUtils {
             if (read(b) < 0)
                 throw new EOFException();
             if (isLE)
-                return (short) (b[1] << 8 | b[0] << 0);
+                return (short) (b[1] << 8 | b[0]);
             else
-                return (short) (b[0] << 8 | b[1] << 0);
+                return (short) (b[0] << 8 | b[1]);
         }
 
         public final byte readInt8() throws IOException {
@@ -848,11 +879,11 @@ public class IoUtils {
             if (isLE) {
                 int i = 0, j = bb.length -1;
                 while (i < len)
-                    b[i++] = ((bb[j--] & 0xFF ) << 8) | ((bb[j--] & 0xFF) << 0);
+                    b[i++] = ((bb[j--] & 0xFF ) << 8) | ((bb[j--] & 0xFF));
             } else {
                 int i = 0, j = 0;
                 while (i < len)
-                    b[i++] =  ((bb[j++] & 0xFF) << 8) | ((bb[j++] & 0xFF) << 0);
+                    b[i++] =  ((bb[j++] & 0xFF) << 8) | ((bb[j++] & 0xFF));
             }
             return b;
         }
@@ -863,11 +894,11 @@ public class IoUtils {
             if (isLE) {
                 int i = 0, j = bb.length -1;
                 while (i < len)
-                    b[i++] = (short)((bb[j--] << 8) | (bb[j--] << 0));
+                    b[i++] = (short)((bb[j--] << 8) | (bb[j--]));
             } else {
                 int i = 0, j = 0;
                 while (i < len)
-                    b[i++] = (short)((bb[j++] << 8) | (bb[j++] << 0));
+                    b[i++] = (short)((bb[j++] << 8) | (bb[j++]));
             }
             return b;
         }
@@ -900,9 +931,9 @@ public class IoUtils {
                 return (((src[offset++] & 0xff) << 24) |
                         ((src[offset++] & 0xff) << 16) |
                         ((src[offset++] & 0xff) <<  8) |
-                        ((src[offset  ] & 0xff) <<  0));
+                        ((src[offset  ] & 0xff)));
             } else {
-                return (((src[offset++] & 0xff) <<  0) |
+                return (((src[offset++] & 0xff)) |
                         ((src[offset++] & 0xff) <<  8) |
                         ((src[offset++] & 0xff) << 16) |
                         ((src[offset  ] & 0xff) << 24));
@@ -914,18 +945,18 @@ public class IoUtils {
                 int h = ((src[offset++] & 0xff) << 24) |
                         ((src[offset++] & 0xff) << 16) |
                         ((src[offset++] & 0xff) <<  8) |
-                        ((src[offset++] & 0xff) <<  0);
+                        ((src[offset++] & 0xff));
                 int l = ((src[offset++] & 0xff) << 24) |
                         ((src[offset++] & 0xff) << 16) |
                         ((src[offset++] & 0xff) <<  8) |
-                        ((src[offset  ] & 0xff) <<  0);
+                        ((src[offset  ] & 0xff));
                 return (((long) h) << 32L) | ((long) l) & 0xffffffffL;
             } else {
-                int l = ((src[offset++] & 0xff) <<  0) |
+                int l = ((src[offset++] & 0xff)) |
                         ((src[offset++] & 0xff) <<  8) |
                         ((src[offset++] & 0xff) << 16) |
                         ((src[offset++] & 0xff) << 24);
-                int h = ((src[offset++] & 0xff) <<  0) |
+                int h = ((src[offset++] & 0xff)) |
                         ((src[offset++] & 0xff) <<  8) |
                         ((src[offset++] & 0xff) << 16) |
                         ((src[offset  ] & 0xff) << 24);
@@ -939,7 +970,7 @@ public class IoUtils {
         public final long _readInt64() throws IOException{
             long ch1 = readInt32();
             long ch2 = readInt32();
-            return (ch1 << 32) + (ch2 << 0);
+            return (ch1 << 32) + (ch2);
         }
 
         public final short _readInt16() throws IOException {
@@ -947,7 +978,7 @@ public class IoUtils {
             int ch2 = this.read();
             if ((ch1 | ch2) < 0)
                 throw new EOFException();
-            return (short)((ch1 << 8) + (ch2 << 0));
+            return (short)((ch1 << 8) + (ch2));
         }
 
         public final int _readUInt16() throws IOException {
@@ -955,27 +986,27 @@ public class IoUtils {
             int ch2 = this.read();
             if ((ch1 | ch2) < 0)
                 throw new EOFException();
-            return (ch1 << 8) + (ch2 << 0);
+            return (ch1 << 8) + (ch2);
         }
 
-        private final int _readInt32() throws IOException {
+        private int _readInt32() throws IOException {
             int ch1 = readInt16();
             int ch2 = readInt16();
             return (ch1 << 16) + (ch2 << 0);
         }
 
         //6119 ms @ 2MB
-        private final long readUInt32Native() throws IOException{
+        private long readUInt32Native() throws IOException{
             int ch1 = read();
             int ch2 = read();
             int ch3 = read();
             int ch4 = read();
             if ((ch1 | ch2 | ch3 | ch4) < 0)
                 throw new EOFException();
-            return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
+            return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4));
         }
 
-        private final int read8shift(int n) throws IOException {
+        private int read8shift(int n) throws IOException {
             int r = read();
             if (r < 0)
                 throw new EOFException();
@@ -983,7 +1014,7 @@ public class IoUtils {
         }
 
         // 6190 ms @ 2MB
-        private final long readUInt32Test0() throws IOException {
+        private long readUInt32Test0() throws IOException {
             long res = read8shift(read8shift(read8shift(0)));
             int last = read();
             if (last >= 0)
@@ -992,7 +1023,7 @@ public class IoUtils {
         }
 
         // 6095 ms @ 2MB
-        private final long readUInt32Test1() throws IOException {
+        private long readUInt32Test1() throws IOException {
             long res = 0;
             int read = read();
             if (read >= 0){
@@ -1192,6 +1223,7 @@ public class IoUtils {
         }
     }
 
+
     public static final class BitRandomAccessOutputStream implements AutoCloseable {
 
         private RandomAccessFile raf;
@@ -1247,9 +1279,6 @@ public class IoUtils {
             raf.close();
         }
     }
-
-
-
 
 
     public static final class BitBuffer {
@@ -1328,9 +1357,6 @@ public class IoUtils {
     }
 
 
-
-
-
     public static class TransferThread extends Thread {
 
         public static void start(InputStream is, OutputStream os, @Nullable ProgressListener listener){
@@ -1407,6 +1433,52 @@ public class IoUtils {
                 ex.printStackTrace();
             }
         }
+    }
+
+
+
+
+
+    public static short readInt16(byte[] bytes, int p, boolean lsb) {
+        if (p < bytes.length + 1) {
+            return lsb ? (short) (
+                    (bytes[p] << 8 & 0xFF) | bytes[p + 1]
+            ) : (short) (
+                    (bytes[p + 1] & 0xFF) << 8 | bytes[p]
+
+            );
+        }
+        return 0;
+    }
+
+    public static int readInt16u(byte[] bytes, int p, boolean lsb) {
+        if (p < bytes.length + 1) {
+            return lsb ? (bytes[p] & 0xFF ) << 8  | bytes[p + 1] :
+                    (bytes[p + 1] & 0xFF ) << 8 | bytes[p];
+        }
+        return 0;
+    }
+
+    public static int readInt32(byte[] bytes, int p, boolean le) {
+        if (p < bytes.length + 3) {
+            return le ? (
+                    (bytes[p] & 0xFF) << 24  | (bytes[p + 1] & 0xFF) << 16 | (bytes[p + 2] & 0xFF) << 8 | (bytes[p + 3] & 0xFF)
+            ) : (
+                    (bytes[p + 3] & 0xFF) << 24  | (bytes[p + 2] & 0xFF) << 16 | (bytes[p + 1] & 0xFF) << 8 | (bytes[p] & 0xFF)
+            );
+        }
+        return 0;
+    }
+
+    public static long readInt32u(byte[] bytes, int p, boolean lsb) {
+        if (p < bytes.length + 3) {
+            return lsb ? (
+                    (bytes[p] << 24 & 0xFF) | (bytes[p + 1] << 16 & 0xFF) | (bytes[p + 2] << 8 & 0xFF) | (bytes[p + 3] & 0xFF)
+            ) : (
+                    (bytes[p + 3] << 24 & 0xFF) | (bytes[p + 2] << 16 & 0xFF) | (bytes[p + 1] << 8 & 0xFF) | (bytes[p] & 0xFF)
+            );
+        }
+        return 0;
     }
 
     public static int readInt8u(ByteBuffer bb) { return 0xff & bb.get(); }

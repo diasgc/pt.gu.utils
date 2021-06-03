@@ -11,17 +11,22 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Iterator;
+import java.util.Map;
 
 public class ConstUtils {
 
     private static JSONObject root;
 
-    public static ArrayMap<String,String> getConstStaticFields(Class<?> clazz)  {
+    public static Map<String,String> getConstStaticFields(Class<?> clazz, boolean swapKV)  {
         ArrayMap<String,String> out = new ArrayMap<>();
-        for (Field f : clazz.getDeclaredFields()){
+        for (Field f : clazz.getDeclaredFields()) {
             try {
-                out.put(f.getName(), String.valueOf(f.get(null)));
-            } catch (IllegalAccessException ignore){}
+                if (swapKV)
+                    out.put(String.valueOf(f.get(null)),f.getName());
+                else
+                    out.put(f.getName(), String.valueOf(f.get(null)));
+            } catch (IllegalAccessException ignore) {
+            }
         }
         return out;
     }

@@ -60,4 +60,9 @@ public class UriUtils {
         b.query(query);
         return b.build();
     }
+
+    public static String filenameFromUri(Uri uri){
+        String lastPathSegment;
+        return uri == null || (lastPathSegment = uri.getLastPathSegment()) == null ? null : FileUtils.filenameFromPath(lastPathSegment);
+    }
 }

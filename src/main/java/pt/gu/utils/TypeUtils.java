@@ -2,6 +2,7 @@ package pt.gu.utils;
 
 import android.util.ArrayMap;
 import android.util.Log;
+import android.util.Pair;
 import android.util.SparseLongArray;
 
 import androidx.annotation.IntRange;
@@ -9,56 +10,19 @@ import androidx.annotation.Nullable;
 import androidx.core.math.MathUtils;
 
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.TimeZone;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TypeUtils {
 
     private static final String TAG = TypeUtils.class.getSimpleName();
-
-    private static final SimpleDateFormat RFC_3399 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.US);
-    
-    public static String dateToRFC3339(Date d) {
-        return RFC_3399.format(d).replaceAll("(\\d\\d)(\\d\\d)$", "$1:$2");
-    }
-
-    public static long parseDate(String date, String format, long resultIfError){
-        if (date != null && format != null) {
-            final SimpleDateFormat sdf = new SimpleDateFormat(format, Locale.US);
-            return parseDate(date, sdf, resultIfError);
-        }
-        return resultIfError;
-    }
-
-    /**
-     * Calculates Estimated Time of Arrival
-     * @param startTime System.currentTimeMillis() when started
-     * @param duration Duration of the event
-     * @param time current progress time in millis (startTime =0, endTime = duration)
-     * @return Estimated Time of Arrival, or 0 if not positive time
-     */
-    public static long eta(long startTime, long duration, long time){
-        // int progress = (int) (time * 100 / duration);
-        // long eta = System.currentTimeMillis() - startTime;
-        // eta = eta * 100 / progress - eta;
-        return time > 0 ? (System.currentTimeMillis() - startTime) * (duration - time) / time : 0;
-    }
-
-    public static long parseDate(@Nullable String date, @Nullable SimpleDateFormat sdf, long resultIfError){
-        if (date != null && sdf != null) {
-            try {
-                final Date d = sdf.parse(date);
-                return d == null ? resultIfError : d.getTime();
-            } catch (Exception e) {
-                Log.e(TAG,e.toString());
-            }
-        }
-        return resultIfError;
-    }
 
     private static final Pattern DOUBLE_UNITS_PATTERN = Pattern.compile("([0-9]+\\.[0-9]+)\\s*([Y|Z|E|P|T|G|M|k|c|m|µ|n|p|f])([a-zA-z]+)");
     private static final ArrayMap<String,Double> UNITS = new ArrayMap<>();
@@ -191,6 +155,20 @@ public class TypeUtils {
         return true;
     }
 
+    public static <A> String stringOf(List<A> list, Function<A,String> formatter, String sep){
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0 ; i < list.size() - 1; i++)
+            sb.append(formatter.apply(list.get(i))).append(sep);
+        sb.append(list.get(list.size() - 1));
+        return sb.toString();
+    }
+
+    public static <A,B> String stringOf(Pair<A,B> pair, Function<A,String> firstFmt, Function<B,String> secondFmt, String sep){
+        return String.format("%s%s%s",firstFmt.apply(pair.first),sep,secondFmt.apply(pair.second));
+    }
+
+
+
     public static int valueOf(boolean b){
         return b ? 1 : 0;
     }
@@ -212,6 +190,7 @@ public class TypeUtils {
         sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
         return sdf.format(time);
     }
+
 
     public static class BitBuilder {
 
@@ -282,6 +261,10 @@ public class TypeUtils {
             }
             return out;
         }
+    }
+
+    public static boolean testFlag(int flags, int flag) {
+        return (flags & flag) == flag;
     }
 
     public static int setFlag(int flags, int flag){

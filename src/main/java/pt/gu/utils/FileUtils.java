@@ -54,9 +54,13 @@ public class FileUtils {
     public static final int GB = 1024 * MB;
     public static final long TB = 1024 * GB;
 
-    public static String filenameFromPath(String path) {
-        int i = Math.max(path.lastIndexOf('/'), path.lastIndexOf(":"));
-        return i < 0 ? path : path.substring(i + 1);
+    @Nullable
+    public static String filenameFromPath(@Nullable String path) {
+        int i;
+        return StringUtils.isNotEmpty(path) &&
+                (i = Math.max(path.lastIndexOf('/'), path.lastIndexOf(":"))) > 0 ?
+                path.substring(i + 1) :
+                path;
     }
 
     public static String formatSize(long size, String format) {

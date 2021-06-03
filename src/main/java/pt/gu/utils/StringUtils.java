@@ -3,6 +3,7 @@ package pt.gu.utils;
 import android.text.format.DateUtils;
 import android.util.ArrayMap;
 import android.util.Log;
+import android.util.Printer;
 import android.util.Size;
 
 import androidx.annotation.NonNull;
@@ -318,7 +319,7 @@ public class StringUtils {
         return -1;
     }
 
-    public static class StringPrinter extends PrintWriter {
+    public static class StringPrinter extends PrintWriter implements Printer {
 
 
         private StringWriter sw;
@@ -340,6 +341,11 @@ public class StringUtils {
         public StringPrinter println(String fmt, Object... args){
             printf(fmt+"\n",args);
             return this;
+        }
+
+        @Override
+        public void println(@Nullable String x) {
+            printf("%s\n",x);
         }
 
         public StringPrinter printStream(InputStream is, boolean autoclose) throws IOException {
