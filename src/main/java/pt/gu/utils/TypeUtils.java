@@ -3,18 +3,13 @@ package pt.gu.utils;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.util.Pair;
-import android.util.SparseLongArray;
 
-import androidx.annotation.IntRange;
 import androidx.annotation.Nullable;
 import androidx.core.math.MathUtils;
 
 import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.TimeZone;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -156,10 +151,12 @@ public class TypeUtils {
     }
 
     public static <A> String stringOf(List<A> list, Function<A,String> formatter, String sep){
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0 ; i < list.size() - 1; i++)
-            sb.append(formatter.apply(list.get(i))).append(sep);
-        sb.append(list.get(list.size() - 1));
+        final StringBuilder sb = new StringBuilder();
+        if (list.size() > 0) {
+            for (int i = 0; i < list.size() - 1; i++)
+                sb.append(formatter.apply(list.get(i))).append(sep);
+            sb.append(list.get(list.size() - 1));
+        }
         return sb.toString();
     }
 
@@ -289,5 +286,50 @@ public class TypeUtils {
 
     public static long toggleFlag(long flags, long flag){
         return flags ^ flag;
+    }
+
+
+
+    public static class FlagBuilder {
+
+        long flags;
+
+        public FlagBuilder(){
+            flags = 0;
+        }
+
+        public FlagBuilder(long init){
+            flags = init;
+        }
+
+        public void reset(){
+            flags = 0;
+        }
+
+        public FlagBuilder setIf(boolean condition, long flag){
+            return condition ? set(flag) : this;
+        }
+
+        public FlagBuilder unsetIf(boolean condition, long flag){
+            return condition ? unset(flag) : this;
+        }
+
+        public FlagBuilder set(long flag){
+            flags |= flag;
+            return this;
+        }
+
+        public FlagBuilder unset(long flag){
+            flags &= ~flag;
+            return this;
+        }
+
+        public int get32bFlags(){
+            return (int)flags;
+        }
+
+        public long get64bFlags(){
+            return flags;
+        }
     }
 }
