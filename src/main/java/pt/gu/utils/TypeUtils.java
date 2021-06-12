@@ -1,9 +1,13 @@
 package pt.gu.utils;
 
+import android.content.Context;
+import android.content.res.Resources;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.util.Pair;
+import android.util.TypedValue;
 
+import androidx.annotation.AttrRes;
 import androidx.annotation.Nullable;
 import androidx.core.math.MathUtils;
 
@@ -82,7 +86,7 @@ public class TypeUtils {
     public static long parseLong(@Nullable String s, long resultIfError){
         if (s != null && (s = s.trim()).length() > 0) {
             try {
-                if (s.charAt(0) == '0'){
+                if (s.charAt(0) == '0' && s.length() > 2){
                     if (s.charAt(1) == 'x')
                         return Long.parseLong(s.substring(2),16);
                     if (s.charAt(1) == 'b')
@@ -331,5 +335,19 @@ public class TypeUtils {
         public long get64bFlags(){
             return flags;
         }
+    }
+
+
+    public static int getColor(Context context, @AttrRes int attr){
+        final Resources.Theme t = context.getTheme();
+        TypedValue tv = new TypedValue();
+        t.resolveAttribute(attr,tv,true);
+        int colorRes = tv.resourceId == 0 ? tv.data : tv.resourceId;
+        return context.getColor(colorRes);
+    }
+
+    public static String getXmlColor(int color, boolean withAlpha){
+        return withAlpha ? String.format("#%06X",color) :
+                String.format("#%06X",color & 0xFFFFFF);
     }
 }

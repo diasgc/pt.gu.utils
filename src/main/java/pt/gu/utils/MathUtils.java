@@ -33,6 +33,12 @@ public class MathUtils {
         }
         return out;
     }
+
+    public static PointF transform(RectF dst, RectF src, PointF p){
+        final float dx = (dst.right - dst.left) / (src.right - src.left);
+        final float dy = (dst.top - dst.bottom) / (src.top - src.bottom);
+        return new PointF((p.x - src.left) * dx + dst.left,(p.y - src.bottom) * dy + dst.bottom);
+    }
     
     public static RectF getBounds(PointF... p){
         RectF f = new RectF();

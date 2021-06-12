@@ -37,6 +37,14 @@ import java.util.zip.ZipInputStream;
 
 public class FileUtils {
 
+    public static File getRealPath(String path) {
+        final File f = new File(path);
+        try {
+            return f.toPath().toRealPath().toFile();
+        } catch (IOException ignore) {}
+        return f;
+    }
+
     public interface FilenameBuilder {
         String buildNew(String name, String ext);
     }
@@ -119,6 +127,10 @@ public class FileUtils {
     }
 
     public static int file2int(File f, int valIfError){
+        return readInteger(f, valIfError);
+    }
+
+    public static int readInteger(File f, int valIfError) {
         try {
             FileInputStream fis = new FileInputStream(f);
             final int len = fis.available();
@@ -129,6 +141,20 @@ public class FileUtils {
         } catch (Exception ignore){ }
         return valIfError;
     }
+
+    public static long readLong(File f, long valIfError) {
+        try {
+            FileInputStream fis = new FileInputStream(f);
+            final int len = fis.available();
+            byte[] data = new byte[len];
+            if (len == fis.read(data)){
+                return TypeUtils.parseLong(new String(data),valIfError);
+            }
+        } catch (Exception ignore){ }
+        return valIfError;
+    }
+
+
 
     @Nullable
     public static String readString(File f){
