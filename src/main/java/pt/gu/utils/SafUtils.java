@@ -18,14 +18,18 @@ import java.util.Locale;
 public class SafUtils {
 
     @NonNull
-    public static List<File> listFiles(Context context, Uri treeUri, String documentId) {
+    public static List<File> listFiles(Context context, Uri treeUri, File parent, String documentId) {
         List<File> fileList = new ArrayList<>();
         Uri saf = DocumentsContract.buildDocumentUriUsingTree(treeUri, documentId);
         if (saf != null) {
             try {
                 ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(saf, "r");
                 File p = new File(String.format(Locale.getDefault(), "/proc/%d/fd/%d", Process.myPid(), pfd.dup().getFd()));
-                ArrayUtils.addAll(fileList, p.listFiles());
+                String[] flist = p.list();
+                if (flist != null && flist.length > 0) {
+                    for (String f : p.list())
+                        fileList.add(new File(parent, f));
+                }
                 pfd.close();
             } catch (IOException e) {
                 Log.e("SafUtils", e.toString());

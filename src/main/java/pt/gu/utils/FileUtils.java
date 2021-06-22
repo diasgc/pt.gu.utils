@@ -37,6 +37,14 @@ import java.util.zip.ZipInputStream;
 
 public class FileUtils {
 
+    public static File fd2File(int fd){
+        return new File(fd2Path(fd));
+    }
+
+    public static String fd2Path(int fd){
+        return String.format(Locale.US,"/proc/%d/fd/%d",android.os.Process.myPid(),fd);
+    }
+
     public static File getRealPath(String path) {
         final File f = new File(path);
         try {
@@ -60,7 +68,7 @@ public class FileUtils {
     public static final int KB = 1024;
     public static final int MB = 1024 * KB;
     public static final int GB = 1024 * MB;
-    public static final long TB = 1024 * GB;
+    public static final long TB = 1024L * GB;
 
     @Nullable
     public static String filenameFromPath(@Nullable String path) {

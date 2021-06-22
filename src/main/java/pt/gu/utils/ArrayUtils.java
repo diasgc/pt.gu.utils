@@ -1,5 +1,6 @@
 package pt.gu.utils;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.arch.core.util.Function;
 import androidx.collection.ArrayMap;
@@ -8,6 +9,7 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +63,22 @@ public class ArrayUtils {
             out.put(vl.get(i),kl.get(i));
         }
         return out;
+    }
+
+    @NonNull
+    public static <T> List<T> listOf(@Nullable T... elements) {
+        List<T> l = new ArrayList<>();
+        if (elements != null){
+            l.addAll(Arrays.asList(elements));
+        }
+        return l;
+    }
+
+    public static <T> List<T> asList(Iterator<T> i) {
+        List<T> list = new ArrayList<>();
+        while (i.hasNext())
+            list.add(i.next());
+        return list;
     }
 
     public static class ListX<T> extends ArrayList<T> {
