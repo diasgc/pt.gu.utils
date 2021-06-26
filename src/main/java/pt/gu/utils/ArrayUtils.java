@@ -1,7 +1,5 @@
 package pt.gu.utils;
 
-import android.util.Pair;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.arch.core.util.Function;
@@ -38,12 +36,50 @@ public class ArrayUtils {
         }
     }
 
-    public static <I,O> O[] toArrayOf(Collection<I> in, Function<I,O> fn) {
-        ArrayList<O> out = new ArrayList<>();
-        for (I i : in)
-            out.add(fn.apply(i));
-        return out.toArray((O[])Array.newInstance(out.getClass().getComponentType(),out.size()));
+    //region Primivites toArray functions
+
+    public static byte[] toArray(Collection<Byte> collection, byte valueOfNull){
+        final byte[] out = new byte[collection.size()];
+        int i = 0;
+        for (Byte e : collection)
+            out[i++] = e == null ? valueOfNull : e;
+        return out;
     }
+
+    public static int[] toArray(Collection<Integer> collection, int valueOfNull){
+        final int[] out = new int[collection.size()];
+        int i = 0;
+        for (Integer e : collection)
+            out[i++] = e == null ? valueOfNull : e;
+        return out;
+    }
+
+    public static long[] toArray(Collection<Long> collection, long valueOfNull){
+        final long[] out = new long[collection.size()];
+        int i = 0;
+        for (Long e : collection)
+            out[i++] = e == null ? valueOfNull : e;
+        return out;
+    }
+
+    public static float[] toArray(Collection<Float> collection, float valueOfNull){
+        final float[] out = new float[collection.size()];
+        int i = 0;
+        for (Float e : collection)
+            out[i++] = e == null ? valueOfNull : e;
+        return out;
+    }
+
+    public static double[] toArray(Collection<Double> collection, double valueOfNull){
+        final double[] out = new double[collection.size()];
+        int i = 0;
+        for (Double e : collection)
+            out[i++] = e == null ? valueOfNull : e;
+        return out;
+    }
+
+    //endregion
+
 
     public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
         List<Map.Entry<K, V>> list = new ArrayList<>(map.entrySet());
@@ -67,6 +103,7 @@ public class ArrayUtils {
         return out;
     }
 
+    @SafeVarargs
     @NonNull
     public static <T> List<T> listOf(@Nullable T... elements) {
         List<T> l = new ArrayList<>();
@@ -87,6 +124,7 @@ public class ArrayUtils {
         return array == null || array.size() == 0;
     }
 
+    @SafeVarargs
     public static <T> boolean isEmpty(T... array) {
         return array == null || array.length == 0;
     }
@@ -112,7 +150,7 @@ public class ArrayUtils {
             for (T i : this)
                 out.add(fn.apply(i));
             Class<?> cls = out.getClass().getComponentType();
-            return cls == null ? null : out.toArray((E[])Array.newInstance(cls,size()));
+            return cls == null ? null : out.toArray((E[]) Array.newInstance(cls,size()));
         }
     }
 
