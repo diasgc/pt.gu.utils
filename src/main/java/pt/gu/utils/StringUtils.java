@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Function;
 
 import static pt.gu.utils.IoUtils.closeQuietly;
 
@@ -317,6 +318,27 @@ public class StringUtils {
                 return i;
         }
         return -1;
+    }
+
+    public static String toString(int[] array, Function<Integer, String> fn) {
+        StringBuilder sb = new StringBuilder();
+        for (int i : array)
+            sb.append(fn.apply(i));
+        return sb.toString().trim();
+    }
+
+    public static String toString(float[] array, Function<Float, String> fn) {
+        StringBuilder sb = new StringBuilder();
+        for (float i : array)
+            sb.append(fn.apply(i));
+        return sb.toString().trim();
+    }
+
+    public static String toString(long[] array, Function<Float, String> fn) {
+        StringBuilder sb = new StringBuilder();
+        for (float i : array)
+            sb.append(fn.apply(i));
+        return sb.toString().trim();
     }
 
     public static class StringPrinter extends PrintWriter implements Printer {

@@ -1,5 +1,7 @@
 package pt.gu.utils;
 
+import android.util.Pair;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.arch.core.util.Function;
@@ -79,6 +81,14 @@ public class ArrayUtils {
         while (i.hasNext())
             list.add(i.next());
         return list;
+    }
+
+    public static <T> boolean isEmpty(List<T> array) {
+        return array == null || array.size() == 0;
+    }
+
+    public static <T> boolean isEmpty(T... array) {
+        return array == null || array.length == 0;
     }
 
     public static class ListX<T> extends ArrayList<T> {
