@@ -1,5 +1,6 @@
 package pt.gu.utils;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
 import android.util.ArrayMap;
@@ -79,8 +80,31 @@ public class TypeUtils {
         return resultIfError;
     }
 
+    @SuppressLint("DefaultLocale")
+    public static String format(long value, String unit){
+        if (value < 1000)
+            return String.format("%d %s",value,unit);
+        if (value < 1000000)
+            return String.format("%.02f k%s",value/1000f,unit);
+        if (value < 1000000000)
+            return String.format("%.02f M%s",value/1000000f,unit);
+        if (value < 1000000000000L)
+            return String.format("%.02f G%s",value/1000000000f,unit);
+        if (value < 1000000000000000L)
+            return String.format("%.02f T%s",value/1000000000000f,unit);
+        return String.format("%.02f P%s",value/1000000000000000f,unit);
+    }
+
     public static int parseInt(@Nullable String s, int resultIfError){
         return (int) parseLong(s,resultIfError);
+    }
+
+    public static int parseInt(@Nullable String s, int radix, int resultIfError){
+        try {
+            return Integer.parseInt(s,radix);
+        } catch (Exception e){
+            return resultIfError;
+        }
     }
 
     public static long parseLong(@Nullable String s, long resultIfError){

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auxv_at_null">End of vector</string>
+    <string name="auxv_at_ignore">Entry should be ignored</string>
+    <string name="auxv_at_execfd">File descriptor of program</string>
+    <string name="auxv_at_phdr">Program headers for program</string>
+    <string name="auxv_at_phent">Size of program header entry</string>
+    <string name="auxv_at_phnum">Number of program headers</string>
+    <string name="auxv_at_pagesz">System page size</string>
+    <string name="auxv_at_base">Base address of interpreter</string>
+    <string name="auxv_at_flags">Flags</string>
+    <string name="auxv_at_entry">Entry point of program</string>
+    <string name="auxv_at_notelf">Program is not ELF</string>
+    <string name="auxv_at_uid">Real uid</string>
+    <string name="auxv_at_euid">Effective uid</string>
+    <string name="auxv_at_gid">Real gid</string>
+    <string name="auxv_at_egid">Effective gid</string>
+    <string name="auxv_at_clktck">Frequency of times()</string>
+    <string name="auxv_at_platform">String identifying platform.</string>
+    <string name="auxv_at_hwcap">Machine-dependent hints about processor capabilities.</string>
+    <string name="auxv_at_fpucw">Used FPU control word.</string>
+    <string name="auxv_at_dcachebsize">Data cache block size.</string>
+    <string name="auxv_at_icachebsize">Instruction cache block size.</string>
+    <string name="auxv_at_ucachebsize">Unified cache block size.</string>
+    <string name="auxv_at_ignoreppc">Entry should be ignored.</string>
+    <string name="auxv_at_secure">Boolean, was exec setuid-like?</string>
+    <string name="auxv_at_base_platform">String identifying real platforms.*/</string>
+    <string name="auxv_at_random">Address of 16 random bytes.</string>
+    <string name="auxv_at_hwcap2">More machine-dependent hints about processor capabilities.</string>
+    <string name="auxv_at_execfn">Filename of executable.</string>
+    <string name="auxv_at_sysinfo">Pointer to the global system page used for system calls and other nice things.</string>
+    <string name="auxv_at_sysinfo_ehdr">Pointer to the global system page used for system calls and other nice things.</string>
+
+    <!--Shapes of the caches. Bits 0–3 contains associativity; bits 4–7 contains log2 of line size; mask those to get cache size.-->
+    <string name="auxv_at_l1i_cacheshape">L1 instruction cache shape</string>
+    <string name="auxv_at_l1d_cacheshape">L1 data cache shape</string>
+    <string name="auxv_at_l2_cacheshape">L2 cache shape</string>
+    <string name="auxv_at_l3_cacheshape">L3 cache shape</string>
+
+    <!--Shapes of the caches, with more room to describe them. GEOMETRY are comprised of cache line size in bytes in the bottom 16 bits and the cache associativity in the next 16 bits.-->
+    <string name="auxv_at_l1i_cachesize">l1 instruction cache size</string>
+    <string name="auxv_at_l1i_cachegeometry">l1 instruction cache geometry</string>
+    <string name="auxv_at_l1d_cachesize">l1 data cache size</string>
+    <string name="auxv_at_l1d_cachegeometry">l1 data cache geometry</string>
+    <string name="auxv_at_l2_cachesize">l2 cache size</string>
+    <string name="auxv_at_l2_cachegeometry">l2 cache size geometry</string>
+    <string name="auxv_at_l3_cachesize">l3 cache size</string>
+    <string name="auxv_at_l3_cachegeometry">l3 cache geometry</string>
+
+</resources>

@@ -268,12 +268,12 @@ public class StringUtils {
         return m;
     }
 
-    public static void streamPrint(InputStream is, boolean autoclose, Iutils.Result<String> linePrinter){
+    public static void streamPrint(InputStream is, boolean autoclose, Printer p) {
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
         try {
             for (String line; (line = br.readLine()) != null; )
-                linePrinter.onResult(line);
-        } catch (IOException e){
+                p.println(line);
+        } catch (IOException e) {
 
         }
         if (autoclose)
@@ -339,6 +339,10 @@ public class StringUtils {
         for (float i : array)
             sb.append(fn.apply(i));
         return sb.toString().trim();
+    }
+
+    public static String trim(String s) {
+        return s == null ? null : s.trim();
     }
 
     public static class StringPrinter extends PrintWriter implements Printer {

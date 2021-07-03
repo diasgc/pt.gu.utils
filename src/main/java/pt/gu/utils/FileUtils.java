@@ -173,7 +173,7 @@ public class FileUtils {
             while (null != (r =bw.readLine()))
                 sb.append(r).append("\n");
             bw.close();
-            return sb.toString();
+            return sb.toString().trim();
         } catch (Exception ex){
             Log.e(TAG,ex.toString());
         }
@@ -224,6 +224,11 @@ public class FileUtils {
             Log.e(TAG,e.toString());
         }
         return resultIfError;
+    }
+
+    public static int readFile(String filePath, int radix, int resultIfError) {
+        final String s = readFile(filePath,null);
+        return TypeUtils.parseInt(s,radix, resultIfError);
     }
 
     public static int readFile(String filePath, int resultIfError) {

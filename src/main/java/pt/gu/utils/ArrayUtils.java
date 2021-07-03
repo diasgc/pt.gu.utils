@@ -2,7 +2,6 @@ package pt.gu.utils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.arch.core.util.Function;
 import androidx.collection.ArrayMap;
 
 import java.lang.reflect.Array;
@@ -13,6 +12,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class ArrayUtils {
@@ -127,6 +127,33 @@ public class ArrayUtils {
     @SafeVarargs
     public static <T> boolean isEmpty(T... array) {
         return array == null || array.length == 0;
+    }
+
+    public static <T> T getLast(T[] array, T defResult) {
+        if (array.length > 0)
+            return array[array.length-1];
+        return defResult;
+    }
+
+    public static <A,B> List<B> listOf(A[] in, Function<A,B> function) {
+        List<B> out = new ArrayList<>();
+        for (A a : in)
+            out.add(function.apply(a));
+        return out;
+    }
+
+    public static <A,B> void convert(List<A> in, B[] out, Function<A,B> fn) {
+        if (out != null && out.length >= in.size()){
+            for (int i = 0; i < in.size(); i++)
+                out[i] = fn.apply(in.get(i));
+        }
+    }
+
+    public static <A,B> void convert(B[] in, List<A> out, Function<B,A> fn) {
+        if (in != null){
+            for (int i = 0; i < in.length; i++)
+                out.add(fn.apply(in[i]));
+        }
     }
 
     public static class ListX<T> extends ArrayList<T> {
