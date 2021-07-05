@@ -149,6 +149,11 @@ public class StringUtils {
         return true;
     }
 
+    public static String lastPathSegment(String path, String pathSep){
+        final int i = path.lastIndexOf(pathSep);
+        return i < 0 || i > path.length() - 2 ? path : path.substring(i + 1);
+    }
+
     public static String readStream(InputStream src){
         return readStream(src,"UTF-8",true);
     }
