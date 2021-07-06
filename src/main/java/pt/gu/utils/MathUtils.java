@@ -6,6 +6,7 @@ import android.util.Pair;
 
 import androidx.annotation.Nullable;
 
+@SuppressWarnings("unused")
 public class MathUtils {
 
     @Nullable

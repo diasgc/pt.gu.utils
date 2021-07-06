@@ -1,6 +1,10 @@
 package pt.gu.utils;
 
+import android.util.Log;
 import android.util.Printer;
+
+import androidx.annotation.Nullable;
+import androidx.core.os.CancellationSignal;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,29 +15,23 @@ import java.util.concurrent.Executors;
 @SuppressWarnings("unused")
 public class ShellUtils {
 
-    public static abstract class ProcessPrinter extends PrintWriter {
+    private static final String TAG = ShellUtils.class.getSimpleName();
+    private static final boolean DBG = false;
+
+    public static class ProcessPrinter extends PrintWriter {
 
         public static final String EOS = ProcessPrinter.class.getSimpleName() + ".EOS";
         public static final String ERR = ProcessPrinter.class.getSimpleName() + ".ERR";
 
-        public ProcessPrinter(Process b, boolean stdErr, PrintWriter out){
+        public ProcessPrinter(Process b, @Nullable Printer stdOut, @Nullable Printer stdErr, @Nullable CancellationSignal signal){
             super(b.getOutputStream(),true);
-            final BufferedReader br = new BufferedReader(new InputStreamReader(stdErr ? b.getErrorStream() : b.getInputStream()));
-            Executors.newSingleThreadExecutor().execute(() -> {
-                try {
-                    for (String s; (s = br.readLine()) != null;)
-                        out.println(ERR + ":" +s);
-                    b.waitFor();
-                } catch (InterruptedException | IOException e){
-                    out.println(ERR);
-                    out.println(e.toString());
-                }
-                IoUtils.closeQuietly(br);
-                out.println(EOS);
-                b.destroy();
-            });
+            if (stdOut != null) {
+                Executors.newSingleThreadExecutor().execute(() -> IoUtils.streamPrintSafe(b.getInputStream(), stdOut, signal, false));
+            }
+            if (stdErr != null){
+                Executors.newSingleThreadExecutor().execute(() -> IoUtils.streamPrintSafe(b.getErrorStream(), stdErr, signal, false));
+            }
         }
-
     }
 
     public static void exec(String cmd, boolean redirErr, Printer printer){

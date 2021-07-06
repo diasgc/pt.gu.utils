@@ -1,6 +1,7 @@
 package pt.gu.utils;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -9,12 +10,15 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class JsonUtils {
+
+    private static final String TAG = JsonUtils.class.getSimpleName();
+    private static final boolean DBG = false;
 
     @Nullable
     public static JSONObject open(File file){
@@ -30,7 +34,9 @@ public class JsonUtils {
         for (String p : paths){
             try {
                 o = o.getJSONObject(p);
-            } catch (JSONException ignore){}
+            } catch (JSONException e){
+                if (DBG) Log.e(TAG,e.toString());
+            }
         }
         return o;
     }
@@ -43,7 +49,9 @@ public class JsonUtils {
                     o = ((JSONObject)o).get(p);
                 else
                     return o;
-            } catch (JSONException ignore){}
+            } catch (JSONException e){
+                if (DBG) Log.e(TAG,e.toString());
+            }
         }
         return o;
     }
@@ -59,19 +67,25 @@ public class JsonUtils {
     public static void put(JSONObject root, String key, Object value) {
         try {
             root.put(key,value);
-        } catch (JSONException ignore){};
+        } catch (JSONException e){
+            if (DBG) Log.e(TAG,e.toString());
+        }
     }
 
     public static void putString(JSONObject root, String key, String value) {
         try {
             root.put(key,value);
-        } catch (JSONException ignore){};
+        } catch (JSONException e){
+            if (DBG) Log.e(TAG,e.toString());
+        }
     }
 
     public static JSONObject openAsset(Context context, String path) {
         try {
             return new JSONObject(FileUtils.readAsset(context,path,""));
-        } catch (JSONException ignore){}
+        } catch (JSONException e){
+            if (DBG) Log.e(TAG,e.toString());
+        }
         return null;
     }
 
@@ -84,13 +98,15 @@ public class JsonUtils {
         Object current = rootJson;
         for (String segment : pathJson.split("/")){
             try {
-                if ((current = ((JSONObject) current).get(segment)) instanceof JSONObject)
+                if ((current = ((JSONObject) current).get(segment)) instanceof JSONObject) {
                     continue;
+                }
                 else if (current instanceof String)
                     return (String) current;
                 else
                     break;
-            } catch (Exception ignore){
+            } catch (Exception e){
+                if (DBG) Log.e(TAG,e.toString());
                 break;
             }
         }
@@ -100,7 +116,9 @@ public class JsonUtils {
     public static String getValue(JSONObject rootJson, String key, String defVal){
         try {
             return rootJson.getString(key);
-        } catch (Exception ignore){ }
+        } catch (Exception e){
+            if (DBG) Log.e(TAG,e.toString());
+        }
         return defVal;
     }
 
@@ -121,7 +139,9 @@ public class JsonUtils {
             try {
                 if ((s = o.getString(i)) != null)
                     result.add(s);
-            } catch (JSONException ignore){}
+            } catch (JSONException e){
+                if (DBG) Log.e(TAG,e.toString());
+            }
         }
         return result.toArray(new String[0]);
     }

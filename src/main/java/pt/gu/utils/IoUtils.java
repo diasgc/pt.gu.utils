@@ -50,9 +50,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+@SuppressWarnings("unused")
 public class IoUtils {
 
     private static final String TAG = IoUtils.class.getSimpleName();
+    private static final boolean DBG = false;
 
     @Nullable
     public static ParcelFileDescriptor pipeFrom(InputStream is) {
@@ -149,11 +151,27 @@ public class IoUtils {
                 fd));
     }
 
-    public static void streamPrint(InputStream is, Printer out, CancellationSignal signal) throws IOException {
+    public static void streamPrint(InputStream is, Printer out, @Nullable CancellationSignal signal) throws IOException {
+        if (signal == null)
+            signal = new CancellationSignal();
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
         for (String s; !signal.isCanceled() && null != (s = br.readLine());)
             out.println(s);
         closeQuietly(is);
+    }
+
+    public static void streamPrintSafe(InputStream is, Printer out, @Nullable CancellationSignal signal, boolean autoclose) {
+        try {
+            BufferedReader br = new BufferedReader(new InputStreamReader(is));
+            if (signal == null)
+                signal = new CancellationSignal();
+            for (String s; !signal.isCanceled() && null != (s = br.readLine()); )
+                out.println(s);
+            if (autoclose)
+                closeQuietly(is);
+        } catch (IOException e){
+            if (DBG) Log.e(TAG,e.toString());
+        }
     }
 
     @Nullable
@@ -790,7 +808,7 @@ public class IoUtils {
                         (b[3] & 0xFFL);
         }
 
-        private static final int iLSL(byte b, int bits){
+        private static int iLSL(byte b, int bits){
             return (b & 0xFF) << bits;
         }
 
@@ -800,7 +818,7 @@ public class IoUtils {
          * @return n- byte integer
          * @throws IOException
          */
-        private final int readUInt(int byteLen) throws IOException {
+        private int readUInt(int byteLen) throws IOException {
             if (byteLen == 0 || byteLen > 4)
                 throw new IOException();
             byte[] b = new byte[byteLen];
@@ -813,7 +831,7 @@ public class IoUtils {
             return res;
         }
 
-        public final int readInt32() throws IOException {
+        public int readInt32() throws IOException {
             byte[] b = new byte[4];
             if (read(b) == -1)
                 throw new EOFException();
@@ -824,7 +842,7 @@ public class IoUtils {
                 return b[0] << 24 | b[1] << 16 | b[2] << 8 | b[3];
         }
 
-        public final int readUInt16() throws IOException {
+        public int readUInt16() throws IOException {
             byte[] b = new byte[2];
             if (read(b) < 0)
                 throw new EOFException();
@@ -834,7 +852,7 @@ public class IoUtils {
                 return (b[0] & 0xFF) << 8 | (b[1] & 0xFF);
         }
 
-        public final short readInt16() throws IOException {
+        public short readInt16() throws IOException {
             byte[] b = new byte[2];
             if (read(b) < 0)
                 throw new EOFException();
@@ -844,14 +862,14 @@ public class IoUtils {
                 return (short) (b[0] << 8 | b[1]);
         }
 
-        public final byte readInt8() throws IOException {
+        public byte readInt8() throws IOException {
             int ch = this.read();
             if (ch < 0)
                 throw new EOFException();
             return (byte)(ch);
         }
 
-        public final int readUInt8() throws IOException {
+        public int readUInt8() throws IOException {
             int ch = this.read();
             if (ch < 0)
                 throw new EOFException();

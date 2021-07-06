@@ -6,6 +6,7 @@ import android.util.ArrayMap;
 
 import androidx.annotation.NonNull;
 
+@SuppressWarnings("unused")
 public class OsUtils {
 
     public enum AuxV {
@@ -105,7 +106,7 @@ public class OsUtils {
             this.mode = m;
         }
 
-        public String readMode(StructStat stat){
+        public String read(StructStat stat){
             switch (mode){
                 case 0: return RWX[stat.st_mode & 7];
                 case 1: return RWX[(stat.st_mode >> 4) & 7];
@@ -120,7 +121,25 @@ public class OsUtils {
         }
     }
 
+    public enum StatDateTime {
 
+        ACCESS(0), MODIFIED(1), CREATE(2);
+
+        private final int mode;
+
+        StatDateTime(int m){
+            this.mode = m;
+        }
+
+        public String read(StructStat stat){
+            switch (mode){
+                case 0: return DateTimeUtils.formatDate(stat.st_atime);
+                case 1: return DateTimeUtils.formatDate(stat.st_mtime);
+                case 2: return DateTimeUtils.formatDate(stat.st_ctime);
+                default: return null;
+            }
+        }
+    }
 
 
 }

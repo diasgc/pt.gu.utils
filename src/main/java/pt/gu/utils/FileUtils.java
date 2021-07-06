@@ -29,13 +29,16 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.text.DecimalFormat;
-import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+@SuppressWarnings("unused")
 public class FileUtils {
+
+    private static final String TAG = FileUtils.class.getSimpleName();
+    private static final boolean DBG = false;
 
     public static File fd2File(int fd){
         return new File(fd2Path(fd));
@@ -49,7 +52,9 @@ public class FileUtils {
         final File f = new File(path);
         try {
             return f.toPath().toRealPath().toFile();
-        } catch (IOException ignore) {}
+        } catch (IOException e) {
+            if (DBG) Log.e(TAG,e.toString());
+        }
         return f;
     }
 
@@ -57,13 +62,11 @@ public class FileUtils {
         String buildNew(String name, String ext);
     }
 
-    private static final String TAG = FileUtils.class.getSimpleName();
-
     private static final int ABBREV_DATE_FORMAT = DateUtils.FORMAT_ABBREV_WEEKDAY
             | DateUtils.FORMAT_ABBREV_MONTH
             | DateUtils.FORMAT_ABBREV_RELATIVE;
 
-    private static final long LIMITDATE = new Date(80,1,1).getTime();
+    private static final long LIMITDATE = DateTimeUtils.dateTimeInMillis(null,1980,1,1);
 
     public static final int KB = 1024;
     public static final int MB = 1024 * KB;
@@ -123,13 +126,13 @@ public class FileUtils {
 
     public static boolean writeString(File file, String toString) {
         try {
-            BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+            final BufferedWriter bw = new BufferedWriter(new FileWriter(file));
             bw.write(toString);
             bw.flush();
             bw.close();
             return true;
-        } catch (Exception ex){
-            Log.e(TAG,ex.toString());
+        } catch (Exception e){
+            if (DBG) Log.e(TAG,e.toString());
         }
         return false;
     }
@@ -146,7 +149,9 @@ public class FileUtils {
             if (len == fis.read(data)){
                 return TypeUtils.parseInt(new String(data),valIfError);
             }
-        } catch (Exception ignore){ }
+        } catch (Exception e){
+            if (DBG) Log.e(TAG,e.toString());
+        }
         return valIfError;
     }
 
@@ -158,7 +163,9 @@ public class FileUtils {
             if (len == fis.read(data)){
                 return TypeUtils.parseLong(new String(data),valIfError);
             }
-        } catch (Exception ignore){ }
+        } catch (Exception e){
+            if (DBG) Log.e(TAG,e.toString());
+        }
         return valIfError;
     }
 
@@ -174,8 +181,8 @@ public class FileUtils {
                 sb.append(r).append("\n");
             bw.close();
             return sb.toString().trim();
-        } catch (Exception ex){
-            Log.e(TAG,ex.toString());
+        } catch (Exception e){
+            if (DBG) Log.e(TAG,e.toString());
         }
         return null;
     }
@@ -194,8 +201,8 @@ public class FileUtils {
                 final byte[] bytes = new byte[is.available()];
                 final int len = is.read(bytes, 0, is.available());
                 return new String(bytes, encoding);
-            } catch (Exception ex) {
-                Log.e(TAG, ex.toString());
+            } catch (Exception e) {
+                if (DBG) Log.e(TAG,e.toString());
             }
         }
         return null;
@@ -221,7 +228,7 @@ public class FileUtils {
         try {
             return readFile(filePath);
         } catch (Exception e){
-            Log.e(TAG,e.toString());
+            if (DBG) Log.e(TAG,e.toString());
         }
         return resultIfError;
     }
@@ -250,7 +257,7 @@ public class FileUtils {
             OutputStream os = new FileOutputStream(target);
             IoUtils.TransferThread.start(is,os);
         } catch (Exception e){
-            Log.e(TAG,e.toString());
+            if (DBG) Log.e(TAG,e.toString());
             return false;
         }
         return true;
@@ -268,35 +275,20 @@ public class FileUtils {
             }
             return true;
         } catch (Exception e){
-            Log.e(TAG,e.toString());
+            if (DBG) Log.e(TAG,e.toString());
             return false;
         }
     }
 
     public static String readAsset(Context context, String path, @Nullable String resultIfError){
-        BufferedReader reader = null;
-        StringBuilder sb = new StringBuilder();
+        StringUtils.StringPrinter sp = StringUtils.StringPrinter.newInstance();
         try {
-            reader = new BufferedReader(
-                    new InputStreamReader(context.getAssets().open(path)));
-            String mLine;
-            while ((mLine = reader.readLine()) != null) {
-                sb.append(mLine).append("\n");
-            }
-        } catch (IOException e) {
-            Log.e(TAG,"path="+path+" "+e.toString());
-            return resultIfError;
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    Log.e(TAG,"path="+path+" "+e.toString());
-                    return resultIfError;
-                }
-            }
+            IoUtils.streamPrint(context.getAssets().open(path), sp, null);
+            return sp.toString();
+        } catch (IOException e){
+            if (DBG) Log.e(TAG,e.toString());
         }
-        return sb.toString();
+        return resultIfError;
     }
 
     public static boolean copyFile(File src, File dstParent, @Nullable IoUtils.ProgressListener listener){
@@ -318,7 +310,7 @@ public class FileUtils {
     }
 
     public static boolean copyFile(ContentResolver resolver, File src, Uri dest, @Nullable IoUtils.ProgressListener listener){
-        if (src == null && !src.canRead())
+        if (src == null || !src.canRead())
             return false;
         final boolean isDir = src.isDirectory();
         final Uri newDest = createFile(resolver,dest,src.getName(),isDir);
@@ -339,7 +331,9 @@ public class FileUtils {
     private static Uri createFile(ContentResolver resolver, Uri parentDest, String name, boolean isDir){
         try {
             return DocumentsContract.createDocument(resolver,parentDest, isDir ? DocumentsContract.Document.MIME_TYPE_DIR : "", name);
-        } catch (FileNotFoundException ignore) { }
+        } catch (FileNotFoundException e) {
+            if (DBG) Log.e(TAG,e.toString());
+        }
         return null;
     }
 
@@ -347,7 +341,9 @@ public class FileUtils {
     private static OutputStream getOutputStream(@Nullable ContentResolver resolver, @Nullable Uri dst){
         try {
             return resolver == null || dst == null ? null : resolver.openOutputStream(dst);
-        } catch (Exception ignore){ }
+        } catch (Exception e){
+            if (DBG) Log.e(TAG,e.toString());
+        }
         return null;
     }
 
@@ -399,7 +395,7 @@ public class FileUtils {
             if (total.length() > 0)
                 return Long.parseLong(total);
         } catch (IOException e) {
-            e.printStackTrace();
+            if (DBG) Log.e(TAG,e.toString());
         }
         return -1;
     }
@@ -409,15 +405,15 @@ public class FileUtils {
             try {
                 Process p = new ProcessBuilder("du","-c",folder.getAbsolutePath()).start();
                 BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                String total = "";
-                for (String line; null != (line = r.readLine());)
-                    total = line;
+                String total = null;
+                for (String l; null != (l = r.readLine());)
+                    total = l;
                 r.close();
                 p.waitFor();
-                if (total.length() > 0 && total.endsWith("total"))
+                if (StringUtils.endsWith(total,"total"))
                     return Long.parseLong(total.split("\\s+")[0]) * 1024;
-            } catch (Exception ex) {
-                ex.printStackTrace();
+            } catch (Exception e) {
+                if (DBG) Log.e(TAG,e.toString());
             }
         }
         return -1;
@@ -425,11 +421,14 @@ public class FileUtils {
 
     public static long folderSize(File directory) {
         long length = 0;
-        for (File file : directory.listFiles()) {
-            if (file.isFile())
-                length += file.length();
-            else
-                length += folderSize(file);
+        File[] files = directory.listFiles();
+        if (!ArrayUtils.isEmpty(files)) {
+            for (File file : files) {
+                if (file.isFile())
+                    length += file.length();
+                else
+                    length += folderSize(file);
+            }
         }
         return length;
     }

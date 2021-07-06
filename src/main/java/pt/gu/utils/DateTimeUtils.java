@@ -1,19 +1,25 @@
 package pt.gu.utils;
 
+import android.text.format.DateUtils;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
+import androidx.core.math.MathUtils;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
+@SuppressWarnings("unused")
 public class DateTimeUtils {
 
     private static final String TAG = DateTimeUtils.class.getSimpleName();
+    private static final boolean DBG = false;
 
+    private static final long LIMITDATE = DateTimeUtils.dateTimeInMillis(null,1980,1,1);
     public static String dateToRFC3339(Date d) {
         return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.getDefault())
                 .format(d)
@@ -26,6 +32,45 @@ public class DateTimeUtils {
             return parseDate(date, sdf, resultIfError);
         }
         return resultIfError;
+    }
+
+    public static String formatDate(long date) {
+        //final long diff = new Date().getTime() - date;
+        //if (diff > DateUtils.WEEK_IN_MILLIS)
+        //    return formatDate(DateUtils.FORMAT_ABBREV_MONTH,date);
+        return formatDate(DateUtils.FORMAT_ABBREV_RELATIVE,date);
+    }
+
+    public static String formatDate(int format, long date) {
+        if (date <= LIMITDATE)
+            return String.format(Locale.US,"(0x%04X)",date);
+        return DateUtils.getRelativeTimeSpanString(
+                date, System.currentTimeMillis(),
+                DateUtils.HOUR_IN_MILLIS, format)
+                .toString().toLowerCase();
+    }
+
+    /**
+     * @param timeZone TimeZone, may be null (default timezone)
+     * @param fields sequecially:
+     *               year(>1900)
+     *               month (1-12)
+     *               day (1-31)
+     *               hour (0-23)
+     *               minutes (0-59)
+     *               seconds (0-59)
+     *               milliseconds (0-999)
+     *               other values will be ignored
+     * @return java datetime in millis
+     */
+    public static long dateTimeInMillis(@Nullable TimeZone timeZone, int... fields){
+        int[] f = Arrays.copyOf(fields,7);
+        final Calendar c = timeZone == null ? Calendar.getInstance() : Calendar.getInstance(timeZone);
+        c.set(Math.max(0,f[0] - 1900), MathUtils.clamp(f[1],1,12),
+                MathUtils.clamp(f[2],1,31),
+                f[3] % 24, f[4] % 60, f[5] % 60);
+        c.set(Calendar.MILLISECOND,f[6] % 1000);
+        return c.getTimeInMillis();
     }
 
     /**
@@ -48,7 +93,7 @@ public class DateTimeUtils {
                 final Date d = sdf.parse(date);
                 return d == null ? resultIfError : d.getTime();
             } catch (Exception e) {
-                Log.e(TAG,e.toString());
+                if (DBG) Log.e(TAG,e.toString());
             }
         }
         return resultIfError;

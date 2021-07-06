@@ -354,6 +354,22 @@ public class StringUtils {
         return s == null ? null : s.trim();
     }
 
+    public static boolean endsWith(String src, String end) {
+        return src != null && src.endsWith(end);
+    }
+
+    public static boolean startsWith(String src, String end) {
+        return src != null && src.startsWith(end);
+    }
+
+    public static int indexOf(String src, String i){
+        return src == null || src.length() == 0 ? -1 : src.indexOf(i);
+    }
+
+    public static int lastIndexOf(String src, String i){
+        return src == null || src.length() == 0 ? -1 : src.lastIndexOf(i);
+    }
+
     public static class StringPrinter extends PrintWriter implements Printer {
 
 
