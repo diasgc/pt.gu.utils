@@ -1,6 +1,7 @@
 package pt.gu.utils;
 
 import android.content.Context;
+import android.system.StructStat;
 import android.util.ArrayMap;
 
 import androidx.annotation.NonNull;
@@ -90,4 +91,36 @@ public class OsUtils {
         }
 
     }
+
+    public enum StatMode {
+
+        OTHER(0),GROUP(1),USER(2),ID(3),ACCESS(4);
+
+        private final String[] RWX = {"---","--X","-W-","-WX","R--","R-X","RW-","RWX"};
+        private final String[] UGV = {"---","--V","-G-","-GV","U--","U-V","UG-","UGV"};
+        private final String[] ACC = {"","Char","Dir","Block","-","File","Link","Socket"};
+        private final int mode;
+
+        StatMode(int m){
+            this.mode = m;
+        }
+
+        public String readMode(StructStat stat){
+            switch (mode){
+                case 0: return RWX[stat.st_mode & 7];
+                case 1: return RWX[(stat.st_mode >> 4) & 7];
+                case 2: return RWX[(stat.st_mode >> 8) & 7];
+                case 3: return UGV[(stat.st_mode >> 12) & 7];
+                case 4:
+                    int i = (stat.st_mode >> 16) & 7;
+                    return i % 2 == 0 ? ACC[i/2] : "Fifo " + ACC[i/2];
+                default:
+                    return null;
+            }
+        }
+    }
+
+
+
+
 }

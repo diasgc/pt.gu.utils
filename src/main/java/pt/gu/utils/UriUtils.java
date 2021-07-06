@@ -4,6 +4,7 @@ import android.net.Uri;
 
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class UriUtils {
 
     public static Uri getContentUri(String authority, String... paths){

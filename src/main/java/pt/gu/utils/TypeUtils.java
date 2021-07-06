@@ -20,11 +20,13 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@SuppressWarnings("unused")
 public class TypeUtils {
 
     private static final String TAG = TypeUtils.class.getSimpleName();
+    private static final boolean DBG = false;
 
-    private static final Pattern DOUBLE_UNITS_PATTERN = Pattern.compile("([0-9]+\\.[0-9]+)\\s*([Y|Z|E|P|T|G|M|k|c|m|µ|n|p|f])([a-zA-z]+)");
+    private static final Pattern DOUBLE_UNITS_PATTERN = Pattern.compile("([0-9]+[.]*[0-9]+)\\s*([YZEPTGMkcmµnpf])([a-zA-z]+)");
     private static final ArrayMap<String,Double> UNITS = new ArrayMap<>();
     static {
         UNITS.put("Z",1.0E21);
@@ -40,7 +42,7 @@ public class TypeUtils {
         UNITS.put("n",1.0E-9);
         UNITS.put("p",1.0E-12);
         UNITS.put("f",1.0E-15);
-    };
+    }
 
     /**
      *
@@ -68,12 +70,13 @@ public class TypeUtils {
                         // Get unit prefix from 's'
                         if ((s1 = m.group(2)) != null && UNITS.get(s1) != null) {
                             // Apply it to result, if exists
-                            result *= UNITS.get(s1);
+                            Double d = UNITS.get(s1);
+                            result *= d == null ? 1 : d;
                         }
                     }
                     return result;
                 } catch (Exception e){
-                    Log.e(TAG, String.format("Tried to parse double with units from '%s': %s",s, e.toString()));
+                    if (DBG) Log.e(TAG, String.format("Tried to parse double with units from '%s': %s",s, e.toString()));
                 }
             }
         }
@@ -100,11 +103,14 @@ public class TypeUtils {
     }
 
     public static int parseInt(@Nullable String s, int radix, int resultIfError){
-        try {
-            return Integer.parseInt(s,radix);
-        } catch (Exception e){
-            return resultIfError;
+        if (s != null && radix > 0) {
+            try {
+                return Integer.parseInt(s, radix);
+            } catch (Exception e) {
+                if (DBG) Log.e(TAG,e.toString());
+            }
         }
+        return resultIfError;
     }
 
     public static long parseLong(@Nullable String s, long resultIfError){
@@ -222,9 +228,9 @@ public class TypeUtils {
         private final static byte[] O = {(byte)0x01,(byte)0x02,(byte)0x04,(byte)0x08,(byte)0x10,(byte)0x20,(byte)0x40,(byte)0x80};
         private final static byte[] A = {(byte)0xFE,(byte)0xFD,(byte)0xFB,(byte)0xF7,(byte)0xEF,(byte)0xDF,(byte)0xBF,(byte)0x7F};
 
-        private int bitSize;
-        private byte[] data;
-        private int bitPos = 0;
+        private final int bitSize;
+        private final byte[] data;
+        private final int bitPos = 0;
 
         enum State{
             SET, RESET, TOGGLE

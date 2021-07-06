@@ -25,7 +25,11 @@ import java.util.function.Function;
 
 import static pt.gu.utils.IoUtils.closeQuietly;
 
+@SuppressWarnings("unused")
 public class StringUtils {
+
+    private static final String TAG = StringUtils.class.getSimpleName();
+    private static final boolean DBG = false;
 
     @Nullable
     public static String[] split(@Nullable String source, String regex){
@@ -217,13 +221,13 @@ public class StringUtils {
 
     public static String formatTime(long time){
         if (time < DateUtils.MINUTE_IN_MILLIS)
-            return new SimpleDateFormat("s's'").format(time);
+            return new SimpleDateFormat("s's'", Locale.US).format(time);
         if (time < DateUtils.HOUR_IN_MILLIS)
-            return new SimpleDateFormat("m'm' s 's'").format(time);
+            return new SimpleDateFormat("m'm' s 's'", Locale.US).format(time);
         if (time < DateUtils.DAY_IN_MILLIS)
-            return new SimpleDateFormat("H'h' m'm'").format(time);
+            return new SimpleDateFormat("H'h' m'm'", Locale.US).format(time);
         int d = (int)(time / DateUtils.DAY_IN_MILLIS);
-        return ""+d+"d "+new SimpleDateFormat("H'h'").format(time % DateUtils.DAY_IN_MILLIS);
+        return ""+d+"d "+new SimpleDateFormat("H'h'", Locale.US).format(time % DateUtils.DAY_IN_MILLIS);
     }
 
     public static CharSequence[] toCharSequence(String[] array) {
@@ -279,7 +283,7 @@ public class StringUtils {
             for (String line; (line = br.readLine()) != null; )
                 p.println(line);
         } catch (IOException e) {
-
+            if (DBG) Log.e(TAG,e.toString());
         }
         if (autoclose)
             closeQuietly(br);
@@ -353,7 +357,7 @@ public class StringUtils {
     public static class StringPrinter extends PrintWriter implements Printer {
 
 
-        private StringWriter sw;
+        private final StringWriter sw;
 
         public static StringPrinter newInstance(){
             return new StringPrinter(new StringWriter());
@@ -364,10 +368,15 @@ public class StringUtils {
             this.sw = sw;
         }
 
-        public StringPrinter printf(String fmt, Object... args){
-            printf(Locale.getDefault(), fmt, args);
+        /*
+        public StringPrinter printf(@NonNull String fmt, @Nullable Object... args){
+            if (args == null)
+                print(fmt);
+            else
+                printf(Locale.getDefault(), fmt, args);
             return this;
         }
+        */
 
         public StringPrinter println(String fmt, Object... args){
             printf(fmt+"\n",args);
@@ -376,7 +385,8 @@ public class StringUtils {
 
         @Override
         public void println(@Nullable String x) {
-            printf("%s\n",x);
+            if (x != null)
+                super.println(x);
         }
 
         public StringPrinter printStream(InputStream is, boolean autoclose) throws IOException {

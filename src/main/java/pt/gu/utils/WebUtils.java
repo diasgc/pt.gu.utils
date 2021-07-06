@@ -1,54 +1,37 @@
 package pt.gu.utils;
 
 import android.net.Uri;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.ResultReceiver;
 import android.util.Log;
 import android.util.SparseArray;
 
 import androidx.annotation.Nullable;
-import androidx.core.os.CancellationSignal;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.Deque;
-import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
+@SuppressWarnings("unused")
 public class WebUtils {
 
     private static final String TAG = WebUtils.class.getSimpleName();
 
     public static void openPreview(Uri u, int headerSize, Iutils.Validator<byte[]> validator){
-        IoUtils.HttpInputStream.openUrl(u, new IoUtils.HttpInputStream.Callback() {
-            @Override
-            public void onConnectionAvailable(IoUtils.HttpInputStream is) {
-                byte[] hdrData;
-                try {
-                    if (is != null &&
-                            is.read((hdrData = new byte[headerSize])) == headerSize &&
-                            validator.test(hdrData)){
-                        int remain = is.available();
-                        byte[] data = new byte[headerSize + remain];
-                        System.arraycopy(hdrData,0,data,0,headerSize);
-                        boolean err = remain != is.read(data,headerSize, remain);
-                        is.close();
-                        validator.onResult(err ? null : data);
-                    }
-                } catch (Exception e) {
-                    validator.onError(e);
+        IoUtils.HttpInputStream.openUrl(u, is -> {
+            byte[] hdrData;
+            try {
+                if (is != null &&
+                        is.read((hdrData = new byte[headerSize])) == headerSize &&
+                        validator.test(hdrData)){
+                    int remain = is.available();
+                    byte[] data = new byte[headerSize + remain];
+                    System.arraycopy(hdrData,0,data,0,headerSize);
+                    boolean err = remain != is.read(data,headerSize, remain);
+                    is.close();
+                    validator.onResult(err ? null : data);
                 }
+            } catch (Exception e) {
+                validator.onError(e);
             }
         });
     }
@@ -62,29 +45,30 @@ public class WebUtils {
 
     private static void joinSeq(List<Uri> urls, OutputStream out, CallbackHandler handler){
 
-        Executors.newSingleThreadExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                Uri u;
-                String finalState = Iutils.Progress.COMPLETE;
-                byte[] data;
-                try {
-                    for (int i = 0; i < urls.size() && !handler.isCancelled(); i++) {
-                        IoUtils.HttpInputStream is = IoUtils.HttpInputStream.openUrl(u = urls.get(i));
+        Executors.newSingleThreadExecutor().execute(() -> {
+            Uri u;
+            String finalState = Iutils.Progress.COMPLETE;
+            byte[] data;
+            try {
+                IoUtils.HttpInputStream is;
+                for (int i = 0; i < urls.size() && !handler.isCancelled(); i++) {
+                    is = IoUtils.HttpInputStream.openUrl(u = urls.get(i));
+                    if (is != null) {
                         // pass CancellationSignal to abort this thread
                         data = IoUtils.toByteArray(is, true, handler.getCancellationSignal());
                         handler.println(u.getLastPathSegment());
                         out.write(data);
+                        is.close();
                     }
-                } catch (IOException e) {
-                    // if one chunk is corrupted, we cancel this thread
-                    handler.getCancellationSignal().cancel();
-                    Log.e(TAG, e.toString());
-                    finalState = Iutils.Progress.ERROR;
                 }
-                IoUtils.closeQuietly(true, out);
-                handler.println(finalState);
+            } catch (IOException e) {
+                // if one chunk is corrupted, we cancel this thread
+                handler.getCancellationSignal().cancel();
+                Log.e(TAG, e.toString());
+                finalState = Iutils.Progress.ERROR;
             }
+            IoUtils.closeQuietly(true, out);
+            handler.println(finalState);
         });
     }
 
@@ -110,10 +94,9 @@ public class WebUtils {
             final Uri u = urls.get(i);
             final int idx = i;
 
-            Executors.newSingleThreadExecutor().execute(new Runnable() {
-                @Override
-                public void run() {
-                    IoUtils.HttpInputStream is = IoUtils.HttpInputStream.openUrl(u);
+            Executors.newSingleThreadExecutor().execute(() -> {
+                IoUtils.HttpInputStream is = IoUtils.HttpInputStream.openUrl(u);
+                if (is != null) {
                     try {
                         // pass CancellationSignal to abort all threads, if cancelled
                         byte[] data = IoUtils.toByteArray(is, true, handler.getCancellationSignal());
@@ -123,11 +106,11 @@ public class WebUtils {
                             chunks.put(idx, data);
 
                             // if all chunks are downloaded, we can write them out by order
-                            if (chunks.size() == urls.size()){
-                                for (int i = 0 ; i < chunks.size(); i++){
-                                    out.write(chunks.get(i));
+                            if (chunks.size() == urls.size()) {
+                                for (int i1 = 0; i1 < chunks.size(); i1++) {
+                                    out.write(chunks.get(i1));
                                 }
-                                IoUtils.closeQuietly(true,out);
+                                IoUtils.closeQuietly(true, out);
                                 handler.println(Iutils.Progress.COMPLETE);
                             }
 
@@ -145,18 +128,20 @@ public class WebUtils {
     @Nullable
     public static byte[] downloadData(String u, @Nullable CallbackHandler listener){
         IoUtils.HttpInputStream is = IoUtils.HttpInputStream.openUrl(Uri.parse(u));
-        try {
-            if (listener != null) {
-                byte[] data = IoUtils.toByteArray(is, true, listener.getCancellationSignal());
-                listener.println(Iutils.Progress.COMPLETE);
-                return data;
-            } else {
-                return IoUtils.toByteArray(is,true);
+        if (is != null) {
+            try {
+                if (listener != null) {
+                    byte[] data = IoUtils.toByteArray(is, true, listener.getCancellationSignal());
+                    listener.println(Iutils.Progress.COMPLETE);
+                    return data;
+                } else {
+                    return IoUtils.toByteArray(is, true);
+                }
+            } catch (IOException e) {
+                Log.e(TAG, e.toString());
+                if (listener != null)
+                    listener.println(Iutils.Progress.ERROR);
             }
-        } catch (IOException e) {
-            Log.e(TAG, e.toString());
-            if (listener != null)
-                listener.println(Iutils.Progress.ERROR);
         }
         return null;
     }

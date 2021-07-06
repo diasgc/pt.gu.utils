@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+@SuppressWarnings("unused")
 public class SafUtils {
 
     @NonNull
@@ -27,7 +28,7 @@ public class SafUtils {
                 File p = new File(String.format(Locale.getDefault(), "/proc/%d/fd/%d", Process.myPid(), pfd.dup().getFd()));
                 String[] flist = p.list();
                 if (flist != null && flist.length > 0) {
-                    for (String f : p.list())
+                    for (String f : flist)
                         fileList.add(new File(parent, f));
                 }
                 pfd.close();
