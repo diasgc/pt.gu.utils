@@ -8,15 +8,38 @@ import android.provider.DocumentsContract;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 @SuppressWarnings("unused")
 public class SafUtils {
+
+    private static final String TAG = SafUtils.class.getSimpleName();
+    private static final boolean DBG = false;
+
+    @Nullable
+    public static File resolveFile(Context context, Uri uri){
+        try {
+            ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(uri, "rw");
+            File p = new File(getProcFileFd(pfd.dup().getFd()));
+            Path p2 = p.toPath().toRealPath();
+            pfd.close();
+            return p2.toFile();
+        } catch (IOException e) {
+            if (DBG) Log.e(TAG,e.toString());
+        }
+        return null;
+    }
+
+    public static String getProcFileFd(int fd){
+        return String.format(Locale.getDefault(), "/proc/%d/fd/%d", Process.myPid(),fd);
+    }
 
     @NonNull
     public static List<File> listFiles(Context context, Uri treeUri, File parent, String documentId) {
@@ -25,7 +48,7 @@ public class SafUtils {
         if (saf != null) {
             try {
                 ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(saf, "r");
-                File p = new File(String.format(Locale.getDefault(), "/proc/%d/fd/%d", Process.myPid(), pfd.dup().getFd()));
+                File p = new File(getProcFileFd(pfd.dup().getFd()));
                 String[] flist = p.list();
                 if (flist != null && flist.length > 0) {
                     for (String f : flist)

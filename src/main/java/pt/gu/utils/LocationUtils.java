@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
 
+@SuppressWarnings("unused")
 public class LocationUtils {
 
     public static void getCurrentLocation(Context context, Consumer<Location> c){

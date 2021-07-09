@@ -1,6 +1,5 @@
 package pt.gu.utils;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.system.StructStat;
@@ -10,7 +9,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @SuppressWarnings("unused")

@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+@SuppressWarnings("unused")
 public class ArrayUtils {
 
     @SafeVarargs
@@ -151,8 +152,7 @@ public class ArrayUtils {
 
     public static <A,B> void convert(B[] in, List<A> out, Function<B,A> fn) {
         if (in != null){
-            for (int i = 0; i < in.length; i++)
-                out.add(fn.apply(in[i]));
+            for (B b : in) out.add(fn.apply(b));
         }
     }
 
