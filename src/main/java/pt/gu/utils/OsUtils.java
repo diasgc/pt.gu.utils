@@ -1,6 +1,8 @@
 package pt.gu.utils;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.system.StructStat;
 import android.util.ArrayMap;
 
@@ -141,5 +143,11 @@ public class OsUtils {
         }
     }
 
-
+    public static void checkPermissions(Activity activity,String... permissions){
+        for (String p : permissions){
+            if (activity.checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED){
+                activity.requestPermissions(new String[]{p},0);
+            }
+        }
+    }
 }
