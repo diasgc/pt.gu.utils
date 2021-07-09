@@ -7,6 +7,11 @@ import android.system.StructStat;
 import android.util.ArrayMap;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @SuppressWarnings("unused")
 public class OsUtils {
@@ -143,11 +148,20 @@ public class OsUtils {
         }
     }
 
-    public static void checkPermissions(Activity activity,String... permissions){
+    /**
+     *
+     * @param context App context
+     * @param permissions array of permissions to check
+     * @return array of permissions not granted
+     */
+    @Nullable
+    public static String[] checkPermissions(Context context,String... permissions){
+        List<String> reqPermissions = new ArrayList<>();
         for (String p : permissions){
-            if (activity.checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED){
-                activity.requestPermissions(new String[]{p},0);
+            if (context.checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED){
+                reqPermissions.add(p);
             }
         }
+        return reqPermissions.size() == 0 ? null : reqPermissions.toArray(new String[0]);
     }
 }
