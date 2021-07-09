@@ -109,11 +109,11 @@ public class OsUtils {
         public String read(StructStat stat){
             switch (mode){
                 case 0: return RWX[stat.st_mode & 7];
-                case 1: return RWX[(stat.st_mode >> 4) & 7];
-                case 2: return RWX[(stat.st_mode >> 8) & 7];
-                case 3: return UGV[(stat.st_mode >> 12) & 7];
+                case 1: return RWX[(stat.st_mode >> 3) & 7];
+                case 2: return RWX[(stat.st_mode >> 6) & 7];
+                case 3: return UGV[(stat.st_mode >> 9) & 7];
                 case 4:
-                    int i = (stat.st_mode >> 16) & 7;
+                    int i = (stat.st_mode >> 12) & 15;
                     return i % 2 == 0 ? ACC[i/2] : "Fifo " + ACC[i/2];
                 default:
                     return null;

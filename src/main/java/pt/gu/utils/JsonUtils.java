@@ -3,6 +3,7 @@ package pt.gu.utils;
 import android.content.Context;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import org.json.JSONArray;
@@ -23,7 +24,7 @@ public class JsonUtils {
     @Nullable
     public static JSONObject open(File file){
         try {
-                String s = FileUtils.readFile(file.getAbsolutePath(), null);
+            String s = FileUtils.readFile(file.getAbsolutePath(), null);
             return s == null ? null : new JSONObject(s);
         } catch (Exception ignore){}
         return null;
@@ -65,10 +66,12 @@ public class JsonUtils {
     }
 
     public static void put(JSONObject root, String key, Object value) {
-        try {
-            root.put(key,value);
-        } catch (JSONException e){
-            if (DBG) Log.e(TAG,e.toString());
+        if (root != null && key != null) {
+            try {
+                root.put(key, value);
+            } catch (JSONException e) {
+                if (DBG) Log.e(TAG, e.toString());
+            }
         }
     }
 
