@@ -6,6 +6,7 @@ import android.util.Printer;
 
 import androidx.core.os.CancellationSignal;
 
+@SuppressWarnings("unused")
 public class CallbackHandler extends Handler implements Runnable, Printer {
 
     public interface Callback extends Printer, CancellationSignal.OnCancelListener {
@@ -18,7 +19,7 @@ public class CallbackHandler extends Handler implements Runnable, Printer {
     }
 
     private CancellationSignal signal;
-    private Callback callback;
+    private final Callback callback;
     private String msg;
 
     public CallbackHandler(Callback callback){

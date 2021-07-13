@@ -10,6 +10,7 @@ import android.text.TextPaint;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+@SuppressWarnings("unused")
 public class CanvasUtils {
 
     public static class PolarF {
@@ -80,7 +81,7 @@ public class CanvasUtils {
 
         @Override
         public String toString() {
-            return "("+String.valueOf(rad)+" , "+String.valueOf(ang)+")";
+            return "("+ rad +" , "+ ang +")";
         }
 
         public float getDegrees() {
@@ -91,8 +92,8 @@ public class CanvasUtils {
     public static class Helper {
 
         private final double pi2 = Math.PI * 2;
-        private Point mSize = new Point(0,0);
-        private PointF mCenter = new PointF(0,0);
+        private final Point mSize = new Point(0,0);
+        private final PointF mCenter = new PointF(0,0);
         private float maxRad = 0;
 
         public Helper(){}

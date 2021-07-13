@@ -13,6 +13,7 @@ import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.Map;
 
+@SuppressWarnings("unused")
 public class ConstUtils {
 
     private static JSONObject root;
@@ -31,7 +32,6 @@ public class ConstUtils {
         return out;
     }
 
-    @Nullable
     public static ArrayMap<String,String> getConsts(Context context, String path){
         checkRoot(context);
         ArrayMap<String,String> out = new ArrayMap<>();
@@ -46,7 +46,7 @@ public class ConstUtils {
                 while (keys.hasNext())
                     out.put(k = keys.next(), o.get(k).toString());
             }
-        } catch (JSONException e){}
+        } catch (JSONException ignore){}
         return out;
     }
 
