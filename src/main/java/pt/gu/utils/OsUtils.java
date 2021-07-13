@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class OsUtils {
@@ -161,5 +162,16 @@ public class OsUtils {
             }
         }
         return reqPermissions.size() == 0 ? null : reqPermissions.toArray(new String[0]);
+    }
+
+    public static void checkPermissions(Context context, Consumer<String[]> request, String... permissions){
+        List<String> reqPermissions = new ArrayList<>();
+        for (String p : permissions){
+            if (context.checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED){
+                reqPermissions.add(p);
+            }
+        }
+        if (reqPermissions.size() > 0)
+            request.accept(reqPermissions.toArray(new String[0]));
     }
 }

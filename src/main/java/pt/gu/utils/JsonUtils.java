@@ -125,6 +125,24 @@ public class JsonUtils {
         return defVal;
     }
 
+    public static int getValue(JSONObject rootJson, String key, int defVal){
+        try {
+            return rootJson.getInt(key);
+        } catch (Exception e){
+            if (DBG) Log.e(TAG,e.toString());
+        }
+        return defVal;
+    }
+
+    public static double getValue(JSONObject rootJson, String key, double defVal){
+        try {
+            return rootJson.getDouble(key);
+        } catch (Exception e){
+            if (DBG) Log.e(TAG,e.toString());
+        }
+        return defVal;
+    }
+
     public static float parseFloat(JSONObject root, String path, float defValue) {
         return TypeUtils.parseFloat(getString(root,path),defValue);
     }
@@ -147,5 +165,20 @@ public class JsonUtils {
             }
         }
         return result.toArray(new String[0]);
+    }
+
+    public static void append(JSONObject rootDst, JSONObject rootSrc) {
+        for (String s : ArrayUtils.asList(rootSrc.keys())) {
+            try {
+                rootDst.put(s, rootSrc.get(s));
+            } catch (JSONException ignore){}
+        }
+    }
+
+    public static JSONObject getJsonObject(JSONObject root, String key) {
+        try {
+            return root.getJSONObject(key);
+        } catch (JSONException ignore){}
+        return null;
     }
 }

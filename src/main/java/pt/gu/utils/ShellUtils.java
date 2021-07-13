@@ -50,5 +50,14 @@ public class ShellUtils {
             StringUtils.streamPrint(p.getInputStream(), true, printer);
             p.waitFor();
         } catch (InterruptedException | IOException ignore){}
+    };
+
+    public static void closeQuietly(Process p){
+        if (p != null){
+            try {
+                p.waitFor();
+            } catch (InterruptedException ignore){}
+            p.destroy();
+        }
     }
 }
