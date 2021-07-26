@@ -18,6 +18,8 @@ import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -370,6 +372,19 @@ public class StringUtils {
         return src == null || src.length() == 0 ? -1 : src.lastIndexOf(i);
     }
 
+    public static String concat(String sep, String... strings) {
+        StringBuilder sb = new StringBuilder();
+        for (String s : strings){
+            if (isNotEmpty(s))
+                sb.append(sep).append(s);
+        }
+        return sb.length() > sep.length() ? sb.substring(sep.length()) : "";
+    }
+
+    public static String plural(int count, String zero, String one, String many) {
+        return count == 0 ? zero : count == 1 ? "1 "+one : String.format("%d %s",count,many);
+    }
+
     public static class StringPrinter extends PrintWriter implements Printer {
 
 
@@ -396,6 +411,12 @@ public class StringUtils {
 
         public StringPrinter println(String fmt, Object... args){
             printf(fmt+"\n",args);
+            return this;
+        }
+
+        public StringPrinter printlnNonNull(String x){
+            if (x != null)
+                super.println(x);
             return this;
         }
 

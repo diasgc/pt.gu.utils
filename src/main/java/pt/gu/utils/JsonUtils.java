@@ -75,6 +75,26 @@ public class JsonUtils {
         }
     }
 
+    public static <T> JSONObject array2JsonObject(String label, T[] array) throws JSONException {
+        JSONObject r1 = new JSONObject();
+        int i = 0;
+        for (T s : array) {
+            r1.put(label + i, String.valueOf(s));
+            i++;
+        }
+        return r1;
+    }
+
+    public static void putfstr(JSONObject root, String key, String fmt, Object... args){
+        if (root != null && key != null && key.length() > 0){
+            try {
+                root.put(key,String.format(fmt,args));
+            } catch (JSONException e){
+                if (DBG) Log.e(TAG,e.toString());
+            }
+        }
+    }
+
     public static void putString(JSONObject root, String key, String value) {
         try {
             root.put(key,value);

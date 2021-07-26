@@ -20,13 +20,14 @@ import java.util.Locale;
 @SuppressWarnings("unused")
 public class SafUtils {
 
+    public static final String AUTHORITY = "com.android.externalstorage.documents";
     private static final String TAG = SafUtils.class.getSimpleName();
-    private static final boolean DBG = false;
+    private static final boolean DBG = true;
 
     @Nullable
     public static File resolveFile(Context context, Uri uri){
         try {
-            ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(uri, "rw");
+            ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(uri, "r");
             File p = new File(getProcFileFd(pfd.dup().getFd()));
             Path p2 = p.toPath().toRealPath();
             pfd.close();
