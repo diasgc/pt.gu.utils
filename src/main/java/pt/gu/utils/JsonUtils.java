@@ -3,7 +3,6 @@ package pt.gu.utils;
 import android.content.Context;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import org.json.JSONArray;
@@ -118,21 +117,9 @@ public class JsonUtils {
             pathJson = pathJson.substring(1);
         if (pathJson.indexOf('/') < 0)
             return getValue(rootJson,pathJson,null);
-        Object current = rootJson;
-        for (String segment : pathJson.split("/")){
-            try {
-                if ((current = ((JSONObject) current).get(segment)) instanceof JSONObject) {
-                    continue;
-                }
-                else if (current instanceof String)
-                    return (String) current;
-                else
-                    break;
-            } catch (Exception e){
-                if (DBG) Log.e(TAG,e.toString());
-                break;
-            }
-        }
+        Object o = getObjectInPath(rootJson,pathJson.split("/"));
+        if (o instanceof String)
+            return (String) o;
         return null;
     }
 

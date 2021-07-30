@@ -46,6 +46,7 @@ import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Stack;
 import java.util.TimeZone;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -306,6 +307,26 @@ public class IoUtils {
         return false;
     }
 
+    public static void streamCopy(Executor executor, @NonNull InputStream is, @NonNull OutputStream os, @Nullable CancellationSignal signal){
+        executor.execute(() -> streamCopy(is,os,signal));
+    }
+
+    public static void streamCopy(@NonNull InputStream is, @NonNull OutputStream os, @Nullable CancellationSignal signal){
+        final byte[] buff = new byte[4096];
+        int i;
+        try {
+            if (signal == null){
+                while ((i = is.read(buff)) > 0)
+                    os.write(buff,0, i);
+            } else {
+                while (!signal.isCanceled() && (i = is.read(buff)) > 0)
+                    os.write(buff, 0, i);
+            }
+        } catch (IOException e){
+            if (DBG) Log.e(TAG,e.toString());
+        }
+    }
+
     public static boolean streamCopy(File src, OutputStream os, @Nullable ProgressListener listener) {
         try {
             new TransferThread(new FileInputStream(src), os, listener)
@@ -409,10 +430,15 @@ public class IoUtils {
 
         private final OutputStream os;
         private final HttpURLConnection connection;
-        private boolean isConnected = false;
+        private final boolean isConnected;
 
+        @Deprecated
         public static void openUrl(Uri u, HttpOutputStream.Callback callback){
             Executors.newSingleThreadExecutor().execute(() -> callback.onConnectionAvailable(HttpOutputStream.openUrl(u)));
+        }
+
+        public static void openUrl(Uri u, Consumer<HttpOutputStream> out){
+            Executors.newSingleThreadExecutor().execute(() -> out.accept(HttpOutputStream.openUrl(u)));
         }
 
         @Nullable
@@ -479,11 +505,18 @@ public class IoUtils {
 
         private final InputStream is;
         private final HttpURLConnection connection;
-        private boolean isConnected = false;
+        private final boolean isConnected;
 
+        @Deprecated
         public static void openUrl(Uri u, Callback callback){
             Executors.newSingleThreadExecutor()
                     .execute(() -> callback.onConnectionAvailable(HttpInputStream.openUrl(u)));
+        }
+
+        public static void openUrl(Uri u, Consumer<HttpInputStream> out){
+            Executors.newSingleThreadExecutor().execute(() -> {
+                out.accept(HttpInputStream.openUrl(u));
+            });
         }
 
         @Nullable
@@ -493,6 +526,7 @@ public class IoUtils {
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setDoInput(true);
                 connection.connect();
+
                 return new HttpInputStream(connection);
             } catch (Exception e) {
                 Log.e(TAG, e.toString());
@@ -1067,7 +1101,7 @@ public class IoUtils {
 
     public static class Binary2JsonReader extends BinaryReader {
 
-        private LinkedList<JSONObject> mJsonList = new LinkedList<>();
+        private final LinkedList<JSONObject> mJsonList = new LinkedList<>();
 
         public Binary2JsonReader(String fileName) throws FileNotFoundException {
             super(fileName);
@@ -1301,7 +1335,7 @@ public class IoUtils {
 
     public static final class BitBuffer {
 
-        private ByteBuffer out;
+        private final ByteBuffer out;
         private long bitBuffer;
         private int bitBufferLen;
         public int crc8;

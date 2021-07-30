@@ -5,19 +5,41 @@ import android.util.Log;
 import android.util.SparseArray;
 
 import androidx.annotation.Nullable;
+import androidx.core.os.CancellationSignal;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 @SuppressWarnings("unused")
 public class WebUtils {
 
     private static final String TAG = WebUtils.class.getSimpleName();
+    private static final boolean DBG = false;
 
+    public static void download(Uri uri, int probeSize, Function<byte[],Boolean> filter, OutputStream out, @Nullable CancellationSignal signal){
+        IoUtils.HttpInputStream.openUrl(uri, (Consumer<IoUtils.HttpInputStream>) is -> {
+            byte[] hdrData;
+            try {
+                if (is != null && is.read((hdrData = new byte[probeSize])) == probeSize &&
+                        filter.apply(hdrData)){
+                    out.write(hdrData);
+                    IoUtils.streamCopy(Executors.newSingleThreadExecutor(), is, out, signal);
+                    out.flush();
+                    IoUtils.closeQuietly(is);
+                }
+            } catch (IOException e) {
+                if (DBG) Log.e(TAG,e.toString());
+            }
+        });
+    }
+
+    @Deprecated
     public static void openPreview(Uri u, int headerSize, Iutils.Validator<byte[]> validator){
-        IoUtils.HttpInputStream.openUrl(u, is -> {
+        IoUtils.HttpInputStream.openUrl(u, (Consumer<IoUtils.HttpInputStream>) is -> {
             byte[] hdrData;
             try {
                 if (is != null &&
