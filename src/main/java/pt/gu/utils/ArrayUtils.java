@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.collection.ArrayMap;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -172,6 +171,7 @@ public class ArrayUtils {
             return this;
         }
 
+        /* UNSAFE CHECK
         public <E> E[] toArrayOf(Function<T,E> fn) {
             ArrayList<E> out = new ArrayList<>();
             for (T i : this)
@@ -179,6 +179,7 @@ public class ArrayUtils {
             Class<?> cls = out.getClass().getComponentType();
             return cls == null ? null : out.toArray((E[]) Array.newInstance(cls,size()));
         }
+        */
     }
 
     public static class BitArray extends ArrayList<Boolean> {
